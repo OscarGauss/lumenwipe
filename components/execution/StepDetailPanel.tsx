@@ -1,0 +1,172 @@
+"use client";
+
+import { useState, useRef } from "react";
+import { CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
+import type { PlannedStep } from "@/types/plan";
+import type { Network } from "@/config/networks";
+import { SE_EXPLORER_BASE } from "@/config/networks";
+import { cn } from "@/lib/utils/cn";
+import SecretKeyInput from "@/components/account-entry/SecretKeyInput";
+import XdrPreviewModal from "./XdrPreviewModal";
+import ProgressIndicator from "./ProgressIndicator";
+
+interface StepDetailPanelProps {
+  step: PlannedStep;
+  network: Network;
+  secretKeyRef: React.MutableRefObject<string>;
+  onSign: () => Promise<void>;
+  onRetry: () => void;
+  progressStatus: string | null;
+}
+
+const STEP_ICONS: Record<string, string> = {
+  NORMALIZE_SIGNERS: "🔑",
+  REMOVE_DATA_ENTRIES: "🗃️",
+  CANCEL_OFFERS: "📊",
+  CLAIM_BALANCES: "🎯",
+  CONVERT_ASSETS: "🔄",
+  REMOVE_TRUSTLINES: "🔗",
+  FUND_MEDIATOR: "🏦",
+  MERGE: "⚡",
+};
+
+export default function StepDetailPanel({
+  step,
+  network,
+  secretKeyRef,
+  onSign,
+  onRetry,
+  progressStatus,
+}: StepDetailPanelProps) {
+  const [confirmed, setConfirmed] = useState(false);
+  const [keyValid, setKeyValid] = useState(false);
+  const explorerBase = SE_EXPLORER_BASE[network];
+
+  const isExecuting =
+    step.status === "signing" || step.status === "submitted";
+  const isMerge = step.type === "MERGE";
+  const canSign = confirmed && keyValid && !isExecuting;
+
+  const confirmText = isMerge
+    ? "I have verified the destination address and I understand this account will be permanently closed."
+    : step.type === "FUND_MEDIATOR"
+    ? "I understand a temporary intermediary account will be created to route my funds to the destination."
+    : `I understand this will ${step.description.toLowerCase()}`;
+
+  return (
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
+      {/* Header */}
+      <div className="border-b border-border px-5 py-4">
+        <div className="flex items-center gap-2 mb-1">
+          <span className="text-lg">{STEP_ICONS[step.type] ?? "•"}</span>
+          <h2 className="font-semibold text-base">{step.title}</h2>
+        </div>
+        <p className="text-sm text-muted-foreground">{step.description}</p>
+      </div>
+
+      {/* Meta */}
+      <div className="border-b border-border px-5 py-3 flex gap-6 text-xs text-muted-foreground">
+        <span>{step.operationCount} operation{step.operationCount !== 1 ? "s" : ""}</span>
+        <span>~{step.estimatedFeeLumens} XLM fee</span>
+        {step.affectedAsset && <span>Asset: {step.affectedAsset.split(":")[0]}</span>}
+      </div>
+
+      <div className="p-5 space-y-5">
+        {/* Confirmed step view */}
+        {step.status === "confirmed" && step.txHash && (
+          <div className="flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
+            <CheckCircle className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium text-emerald-400 mb-1">Step confirmed</p>
+              <a
+                href={`${explorerBase}/tx/${step.txHash}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-stellar transition-colors font-mono"
+              >
+                {step.txHash.slice(0, 20)}...{step.txHash.slice(-8)}
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+          </div>
+        )}
+
+        {/* Failed step view */}
+        {step.status === "failed" && (
+          <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 space-y-3">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+              <p className="text-sm text-destructive">{step.error}</p>
+            </div>
+            <button
+              onClick={onRetry}
+              className="text-xs text-stellar hover:underline"
+            >
+              Retry this step
+            </button>
+          </div>
+        )}
+
+        {/* Pending / executing view */}
+        {(step.status === "pending" || isExecuting) && (
+          <>
+            {/* Merge-specific warning */}
+            {isMerge && (
+              <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 text-sm">
+                <p className="font-semibold text-destructive mb-1">
+                  This action is permanent and irreversible.
+                </p>
+                <p className="text-muted-foreground">
+                  After this step, the account will no longer exist on the Stellar ledger.
+                  Verify your destination address carefully before signing.
+                </p>
+              </div>
+            )}
+
+            {/* XDR preview */}
+            {step.txXdr && <XdrPreviewModal xdr={step.txXdr} />}
+
+            {/* Secret key */}
+            <SecretKeyInput
+              secretKeyRef={secretKeyRef}
+              onValidityChange={setKeyValid}
+              disabled={isExecuting}
+            />
+
+            {/* Confirmation checkbox */}
+            <label className="flex items-start gap-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={confirmed}
+                onChange={(e) => setConfirmed(e.target.checked)}
+                disabled={isExecuting}
+                className="mt-0.5 accent-stellar"
+              />
+              <span className="text-sm text-muted-foreground">{confirmText}</span>
+            </label>
+
+            {/* Progress or sign button */}
+            {progressStatus ? (
+              <ProgressIndicator status={progressStatus} />
+            ) : (
+              <button
+                onClick={onSign}
+                disabled={!canSign}
+                className={cn(
+                  "w-full py-2.5 px-4 rounded-lg font-semibold text-sm transition-colors",
+                  "flex items-center justify-center gap-2",
+                  isMerge
+                    ? "bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-40"
+                    : "bg-stellar text-black hover:bg-stellar/90 disabled:opacity-40",
+                  !canSign && "cursor-not-allowed"
+                )}
+              >
+                {isMerge ? "Sign and merge account" : "Sign and submit"}
+              </button>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
