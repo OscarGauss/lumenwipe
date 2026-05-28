@@ -136,10 +136,12 @@ export function useStepExecution() {
           );
           clearMediatorSession();
           markStepConfirmed(step.index, result.mergeHash);
+          recordMergeStats(result.mergeHash, network);
         } else {
           setProgressStatus("Submitting to Stellar network...");
           const { txHash } = await submitAndWait(signedXdr, network, setProgressStatus);
           markStepConfirmed(step.index, txHash);
+          if (step.type === "MERGE") recordMergeStats(txHash, network);
         }
 
         // Persist session progress
@@ -186,4 +188,18 @@ export function useStepExecution() {
 function getBatchIndex(step: PlannedStep, type: string, plan: PlannedStep[]): number {
   const stepsOfType = plan.filter((s) => s.type === type);
   return stepsOfType.findIndex((s) => s.index === step.index);
+}
+
+/**
+ * Fire-and-forget: tells the backend to count this merge.
+ * Never blocks the UI — errors are swallowed intentionally.
+ */
+function recordMergeStats(txHash: string, network: string): void {
+  fetch("/api/stats/record", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ txHash, network }),
+  }).catch(() => {
+    // stats are non-critical — ignore failures
+  });
 }

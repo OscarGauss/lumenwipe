@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { ShieldCheck, Zap, GitMerge, AlertOctagon, RotateCcw, X } from "lucide-react";
 import type { Network } from "@/config/networks";
 import AccountEntryForm from "@/components/account-entry/AccountEntryForm";
+import NetworkStats from "@/components/stats/NetworkStats";
 import { useSessionRecovery } from "@/hooks/useSessionRecovery";
 import { deleteSession } from "@/lib/session/store";
 import { useDemolishStore } from "@/store/demolish";
@@ -88,6 +89,9 @@ export default function HomePage({ params }: { params: { network: Network } }) {
           </div>
         ))}
       </div>
+
+      {/* Live stats */}
+      <NetworkStats />
 
       {/* Warning */}
       <div className="flex items-start gap-2.5 bg-warning/10 border border-warning/20 rounded-lg p-3 mb-8 text-sm">
