@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -8,15 +8,16 @@ import type { Network } from "@/config/networks";
 import { useDemolishStore } from "@/store/demolish";
 import ExecutionWizard from "@/components/execution/ExecutionWizard";
 
-export default function ExecutePage({ params }: { params: { network: Network } }) {
+export default function ExecutePage({ params }: { params: Promise<{ network: Network }> }) {
+  const { network } = use(params);
   const router = useRouter();
   const { executionPlan, sourceAddress } = useDemolishStore();
 
   useEffect(() => {
     if (!sourceAddress || executionPlan.length === 0) {
-      router.replace(`/${params.network}`);
+      router.replace(`/${network}`);
     }
-  }, [sourceAddress, executionPlan.length, params.network, router]);
+  }, [sourceAddress, executionPlan.length, network, router]);
 
   if (!sourceAddress || executionPlan.length === 0) return null;
 
@@ -24,7 +25,7 @@ export default function ExecutePage({ params }: { params: { network: Network } }
     <div className="max-w-3xl mx-auto px-4 py-8">
       <div className="flex items-center gap-2 mb-6">
         <Link
-          href={`/${params.network}/analyze`}
+          href={`/${network}/analyze`}
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -35,7 +36,7 @@ export default function ExecutePage({ params }: { params: { network: Network } }
         </span>
       </div>
 
-      <ExecutionWizard network={params.network} />
+      <ExecutionWizard network={network} />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import { useRouter } from "next/navigation";
 import { ShieldCheck, Zap, GitMerge, AlertOctagon, RotateCcw, X } from "lucide-react";
 import type { Network } from "@/config/networks";
@@ -9,9 +10,10 @@ import { useSessionRecovery } from "@/hooks/useSessionRecovery";
 import { deleteSession } from "@/lib/session/store";
 import { useDemolishStore } from "@/store/demolish";
 
-export default function HomePage({ params }: { params: { network: Network } }) {
+export default function HomePage({ params }: { params: Promise<{ network: Network }> }) {
+  const { network } = use(params);
   const router = useRouter();
-  const { session, checked, clearSession } = useSessionRecovery(params.network);
+  const { session, checked, clearSession } = useSessionRecovery(network);
   const { setAddresses, setMediatorRequired, initSession } = useDemolishStore();
 
   function handleResume() {
@@ -19,7 +21,7 @@ export default function HomePage({ params }: { params: { network: Network } }) {
     setAddresses(session.sourceAddress, session.destinationAddress, session.memo ?? undefined);
     setMediatorRequired(!!session.mediatorPublicKey, session.mediatorPublicKey ?? undefined);
     initSession();
-    router.push(`/${params.network}/execute`);
+    router.push(`/${network}/execute`);
   }
 
   async function handleDismiss() {
@@ -36,7 +38,7 @@ export default function HomePage({ params }: { params: { network: Network } }) {
           <div className="flex items-center gap-2 min-w-0">
             <RotateCcw className="h-4 w-4 text-stellar shrink-0" />
             <span className="text-muted-foreground truncate">
-              In-progress closure found for{" "}
+              In-progress account merge found for{" "}
               <span className="font-mono text-xs">
                 {session.sourceAddress.slice(0, 8)}…
               </span>
@@ -66,7 +68,7 @@ export default function HomePage({ params }: { params: { network: Network } }) {
           Non-custodial · Client-side signing only
         </div>
         <h1 className="text-3xl font-bold tracking-tight mb-3">
-          Close your Stellar account
+          Merge your Stellar account
         </h1>
         <p className="text-muted-foreground text-base leading-relaxed max-w-lg mx-auto">
           Safely wind down a Stellar account and recover all locked XLM reserves.
@@ -98,8 +100,9 @@ export default function HomePage({ params }: { params: { network: Network } }) {
         <AlertOctagon className="h-4 w-4 text-warning mt-0.5 shrink-0" />
         <p className="text-muted-foreground">
           <span className="text-warning font-medium">Irreversible action.</span>{" "}
-          Closing an account permanently removes it from the Stellar ledger. Make sure
-          you have a working destination address before proceeding.
+          An Account Merge transfers the XLM balance to the destination and removes the
+          source account from the Stellar ledger. Make sure you have a working
+          destination address before proceeding.
         </p>
       </div>
 

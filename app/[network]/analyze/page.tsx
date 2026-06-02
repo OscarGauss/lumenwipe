@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { use, useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, AlertTriangle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -13,7 +13,8 @@ import { buildPlan } from "@/lib/stellar/tx-builder";
 import { createMediatorSession } from "@/lib/stellar/mediator-session";
 import PlanView from "@/components/plan/PlanView";
 
-export default function AnalyzePage({ params }: { params: { network: Network } }) {
+export default function AnalyzePage({ params }: { params: Promise<{ network: Network }> }) {
+  const { network: routeNetwork } = use(params);
   const router = useRouter();
   const searchParams = useSearchParams();
   const network = useNetworkStore((s) => s.network);
@@ -40,7 +41,7 @@ export default function AnalyzePage({ params }: { params: { network: Network } }
 
   const fetchData = useCallback(async () => {
     if (!effectiveSource || !effectiveDest) {
-      router.push(`/${params.network}`);
+      router.push(`/${routeNetwork}`);
       return;
     }
 
@@ -82,7 +83,7 @@ export default function AnalyzePage({ params }: { params: { network: Network } }
     } finally {
       setLoading(false);
     }
-  }, [effectiveSource, effectiveDest, network, params.network, router, setAccountState, setAddresses]);
+  }, [effectiveSource, effectiveDest, network, routeNetwork, router, setAccountState, setAddresses, syncMediatorToStore]);
 
   useEffect(() => {
     fetchData();
@@ -108,7 +109,7 @@ export default function AnalyzePage({ params }: { params: { network: Network } }
           <p className="font-medium">Analysis failed</p>
           <p className="text-sm text-muted-foreground">{error}</p>
           <Link
-            href={`/${params.network}`}
+            href={`/${routeNetwork}`}
             className="inline-flex items-center gap-1.5 text-sm text-stellar hover:underline"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Go back
@@ -124,7 +125,7 @@ export default function AnalyzePage({ params }: { params: { network: Network } }
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="flex items-center gap-2 mb-6">
         <Link
-          href={`/${params.network}`}
+          href={`/${routeNetwork}`}
           className="text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -137,7 +138,7 @@ export default function AnalyzePage({ params }: { params: { network: Network } }
         plan={plan}
         destinationAddress={effectiveDest!}
         mediatorRequired={mediatorRequired}
-        network={params.network}
+        network={routeNetwork}
         onRefresh={fetchData}
         loading={loading}
       />

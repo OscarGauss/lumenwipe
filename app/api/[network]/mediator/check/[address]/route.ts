@@ -7,9 +7,9 @@ import { AccountNotFoundError } from "@/lib/utils/errors";
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { network: string; address: string } }
+  { params }: { params: Promise<{ network: string; address: string }> }
 ) {
-  const { network, address } = params;
+  const { network, address } = await params;
 
   if (!isValidNetwork(network)) {
     return NextResponse.json({ error: "Invalid network" }, { status: 400 });

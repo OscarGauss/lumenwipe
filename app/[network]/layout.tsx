@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { use, useEffect } from "react";
 import { notFound } from "next/navigation";
 import { isValidNetwork } from "@/config/networks";
 import { useNetworkStore } from "@/store/network";
@@ -12,9 +12,9 @@ export default function NetworkLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { network: string };
+  params: Promise<{ network: string }>;
 }) {
-  const { network } = params;
+  const { network } = use(params);
   const setNetwork = useNetworkStore((s) => s.setNetwork);
   const currentNetwork = useNetworkStore((s) => s.network);
   const reset = useDemolishStore((s) => s.reset);
