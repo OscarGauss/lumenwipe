@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["bun"],
+    "lib": ["es2017"],
+    "noEmit": true
+  },
+  "include": ["./**/*.ts", "./**/*.tsx"],
+  "exclude": []
+}

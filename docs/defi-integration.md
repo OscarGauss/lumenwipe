@@ -6,14 +6,14 @@
 
 Full Soroban DeFi protocol support is the primary differentiator of this implementation relative to the existing `stellar.expert/demolisher` reference tool. The integration layer handles position detection, unwinding transaction construction, and sequencing for the following protocols:
 
-| Protocol | Category | Integration Source |
-|---|---|---|
-| Blend Protocol (V1 + V2) | Lending / Borrowing | OctoPos / Orion + Blend SDK |
-| Aquarius AMM | Automated Market Maker | OctoPos / Orion + Aquarius contracts |
-| Soroswap | Automated Market Maker | OctoPos / Orion + Soroswap contracts |
-| Phoenix Hub | Concentrated Liquidity | OctoPos / Orion + Phoenix contracts |
-| FxDAO | CDP Stablecoin | OctoPos / Orion + FxDAO contracts |
-| Classic Stellar DEX | Order Book DEX | Stellar Indexer |
+| Protocol                 | Category               | Integration Source                   |
+| ------------------------ | ---------------------- | ------------------------------------ |
+| Blend Protocol (V1 + V2) | Lending / Borrowing    | OctoPos / Orion + Blend SDK          |
+| Aquarius AMM             | Automated Market Maker | OctoPos / Orion + Aquarius contracts |
+| Soroswap                 | Automated Market Maker | OctoPos / Orion + Soroswap contracts |
+| Phoenix Hub              | Concentrated Liquidity | OctoPos / Orion + Phoenix contracts  |
+| FxDAO                    | CDP Stablecoin         | OctoPos / Orion + FxDAO contracts    |
+| Classic Stellar DEX      | Order Book DEX         | Stellar Indexer                      |
 
 ---
 
@@ -109,6 +109,7 @@ For each LP position:
 1. Query the pool contract for total shares (`get_total_shares()`), reserve amounts (`get_reserves()`), and the account's share balance.
 
 2. Calculate the expected withdrawal amounts:
+
    ```
    withdrawal_a = (account_shares / total_shares) * reserve_a
    withdrawal_b = (account_shares / total_shares) * reserve_b

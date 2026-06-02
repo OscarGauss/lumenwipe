@@ -57,6 +57,7 @@ The tool must display all claimable balances where the account is a claimant. Us
 **AMM / LP positions.** All Automated Market Maker pool stakes on Aquarius must be withdrawn. For each pool, the tool must calculate the current withdrawal amounts and construct the appropriate Soroban invocation.
 
 **DeFi protocol positions.** Through integration with the DeFi Position API, the tool must:
+
 - Exit all Blend supply positions, repay all Blend borrow positions (purchasing the required asset if needed), and withdraw all Blend backstop deposits.
 - Withdraw all Aquarius liquidity positions.
 - Remove all Soroswap LP positions.
@@ -83,6 +84,7 @@ After conversion, all non-XLM trustlines must be removed. If any non-zero balanc
 The final operation merges the account, transferring all remaining XLM (including recovered reserves) to the destination address.
 
 **Destination compatibility.** Because CEXes do not support `ACCOUNT_MERGE`, the tool must use a temporary mediator account. The flow is:
+
 1. The tool creates (or the user provides) a temporary funded mediator account.
 2. The source account performs `ACCOUNT_MERGE` into the mediator.
 3. The mediator forwards all received funds to the final destination address via `Payment`.
@@ -124,6 +126,7 @@ The frontend must support connection via stellar-wallets-kit, which covers Freig
 ### 3.5 Irreversibility Safeguards
 
 Every destructive action must be preceded by a confirmation screen that:
+
 - Explicitly states what will happen and that the action cannot be undone.
 - Displays the affected balance, position, or entry.
 - Requires active user acknowledgment (not a pre-checked checkbox).

@@ -1,0 +1,92 @@
+import { Coins, Database, ArrowUpDown, Link2, Users, TrendingUp } from "lucide-react";
+import type { AccountState } from "@/types/account";
+import { formatXlm, calcRecoverableReserve } from "@/lib/utils/amounts";
+
+interface AccountSummaryCardProps {
+  account: AccountState;
+  destinationAddress: string;
+  totalFee: string;
+  mediatorRequired: boolean;
+}
+
+export default function AccountSummaryCard({
+  account,
+  destinationAddress,
+  totalFee,
+  mediatorRequired,
+}: AccountSummaryCardProps) {
+  const recoverableXlm = calcRecoverableReserve(account.numSubEntries);
+  const estimatedFinal = (
+    parseFloat(account.nativeBalanceLumens) -
+    parseFloat(totalFee) -
+    (mediatorRequired ? 1.0 : 0)
+  ).toFixed(7);
+
+  const stats = [
+    {
+      icon: Coins,
+      label: "XLM balance",
+      value: formatXlm(account.nativeBalanceLumens),
+    },
+    {
+      icon: Database,
+      label: "Data entries",
+      value: account.dataEntries.length,
+    },
+    {
+      icon: ArrowUpDown,
+      label: "Open offers",
+      value: account.openOffers.length,
+    },
+    {
+      icon: Link2,
+      label: "Trustlines",
+      value: account.trustlines.length,
+    },
+    {
+      icon: Users,
+      label: "Extra signers",
+      value: account.signers.filter((s) => s.key !== account.address).length,
+    },
+    {
+      icon: TrendingUp,
+      label: "Recoverable reserve",
+      value: formatXlm(recoverableXlm),
+    },
+  ];
+
+  return (
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="border-b border-border px-4 py-3 flex items-center justify-between">
+        <h3 className="text-sm font-semibold">Account summary</h3>
+        <span className="font-mono-address text-muted-foreground text-xs truncate max-w-[200px]">
+          {account.address.slice(0, 8)}...{account.address.slice(-8)}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-3 divide-x divide-y divide-border">
+        {stats.map(({ icon: Icon, label, value }) => (
+          <div key={label} className="p-3">
+            <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+              <Icon className="h-3.5 w-3.5" />
+              <span className="text-xs">{label}</span>
+            </div>
+            <p className="text-sm font-semibold">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="border-t border-border px-4 py-3 flex items-center justify-between text-sm">
+        <span className="text-muted-foreground">Estimated received at destination</span>
+        <span className="font-semibold text-stellar">{formatXlm(estimatedFinal)}</span>
+      </div>
+
+      <div className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
+        Destination:{" "}
+        <span className="font-mono-address">
+          {destinationAddress.slice(0, 12)}...{destinationAddress.slice(-8)}
+        </span>
+      </div>
+    </div>
+  );
+}

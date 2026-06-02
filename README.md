@@ -10,17 +10,17 @@ The Account Demolisher solves this by providing a guided, non-custodial, client-
 
 ## Documentation Index
 
-| Document | Description |
-|---|---|
-| [Technical Specification](docs/technical-specification.md) | Architecture, component design, transaction flow |
-| [Requirements](docs/requirements.md) | Functional and non-functional requirements |
-| [Security Model](docs/security-model.md) | Trust minimization, key handling, audit approach |
-| [DeFi Protocol Integration](docs/defi-integration.md) | Blend, Aquarius, Soroswap, Phoenix Hub, FxDAO |
-| [API Reference](docs/api-reference.md) | Backend service endpoints and data models |
-| [UX Design](docs/ux-design.md) | User flows, confirmation screens, dry-run mode |
-| [Test Strategy](docs/test-strategy.md) | Unit, integration, adversarial, and edge-case testing |
-| [Delivery Plan](docs/delivery-plan.md) | Milestones, tranches, and acceptance criteria |
-| [Dependency Services](docs/dependency-services.md) | OctoPos and Orion DeFi position API integration |
+| Document                                                   | Description                                           |
+| ---------------------------------------------------------- | ----------------------------------------------------- |
+| [Technical Specification](docs/technical-specification.md) | Architecture, component design, transaction flow      |
+| [Requirements](docs/requirements.md)                       | Functional and non-functional requirements            |
+| [Security Model](docs/security-model.md)                   | Trust minimization, key handling, audit approach      |
+| [DeFi Protocol Integration](docs/defi-integration.md)      | Blend, Aquarius, Soroswap, Phoenix Hub, FxDAO         |
+| [API Reference](docs/api-reference.md)                     | Backend service endpoints and data models             |
+| [UX Design](docs/ux-design.md)                             | User flows, confirmation screens, dry-run mode        |
+| [Test Strategy](docs/test-strategy.md)                     | Unit, integration, adversarial, and edge-case testing |
+| [Delivery Plan](docs/delivery-plan.md)                     | Milestones, tranches, and acceptance criteria         |
+| [Dependency Services](docs/dependency-services.md)         | OctoPos and Orion DeFi position API integration       |
 
 ## Quick Start
 
