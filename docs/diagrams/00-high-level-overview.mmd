@@ -1,0 +1,13 @@
+flowchart TB
+    user["User"]
+    subgraph browser["LumenWipe: runs in the browser, non-custodial"]
+        direction LR
+        a["Analyze<br/>the account"] --> b["Build the<br/>wind-down plan"] --> c["Review and<br/>sign each step"] --> d["Submit to<br/>Stellar"]
+    end
+    data["Read-only data sources<br/>Stellar RPC · stellar.expert indexer<br/>DeFi Position API (OctoPos / Orion) · Soroswap routing"]
+    stellar["Stellar network<br/>(classic + Soroban)"]
+
+    user --> browser
+    data -.->|"account state and DeFi positions"| a
+    d -->|"user-signed transactions"| stellar
+    stellar -->|"recovered XLM to the destination"| user
