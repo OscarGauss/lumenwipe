@@ -104,6 +104,28 @@ Note that being a *claimant* of a claimable balance does not block the merge, bu
 
 The system has three layers: a browser client that builds and signs every transaction, a thin read-only backend that aggregates data, and the Stellar network plus the external data services the backend reads from. The trust boundary is the browser. Private keys and signing live entirely on the client side. Nothing the backend does can move a user's funds.
 
+### At a high level
+
+In plain English: LumenWipe is a web app that runs in the user's browser. The user connects a wallet (or, in advanced mode, pastes a key); the app reads the account, works out everything that has to be undone to close it, and walks the user through signing each transaction. Keys never leave the browser. A small read-only service only gathers public data (balances and DeFi positions) so the app can build an accurate plan. The app reaches the network through Stellar RPC, reads what the account holds from an existing indexer (stellar.expert), detects DeFi positions through a position API (OctoPos or Orion), and finds the best route to sell leftover assets through Soroswap. The stack is Next.js and TypeScript for the app, the official Stellar SDK, stellar-wallets-kit for wallet connections, and a thin read-only TypeScript backend that only reads and caches public data.
+
+```mermaid
+flowchart TB
+    user["User"]
+    subgraph browser["LumenWipe: runs in the browser, non-custodial"]
+        direction LR
+        a["Analyze<br/>the account"] --> b["Build the<br/>wind-down plan"] --> c["Review and<br/>sign each step"] --> d["Submit to<br/>Stellar"]
+    end
+    data["Read-only data sources<br/>Stellar RPC · stellar.expert indexer<br/>DeFi Position API (OctoPos / Orion) · Soroswap routing"]
+    stellar["Stellar network<br/>(classic + Soroban)"]
+
+    user --> browser
+    data -.->|"account state and DeFi positions"| a
+    d -->|"user-signed transactions"| stellar
+    stellar -->|"recovered XLM to the destination"| user
+```
+
+The detailed view below breaks the same system into its client, backend, and data-source components.
+
 ```mermaid
 flowchart TB
     subgraph client["Browser client: trust boundary, keys never leave"]
