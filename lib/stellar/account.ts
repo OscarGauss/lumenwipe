@@ -1,6 +1,6 @@
 import { Keypair, xdr, StrKey, Asset } from "@stellar/stellar-sdk";
 import { getRpcServer } from "./rpc";
-import { seGet } from "@/lib/se-api/client";
+import { seGet, SeApiError } from "@/lib/se-api/client";
 import { AccountNotFoundError } from "@/lib/utils/errors";
 import { STROOPS_PER_XLM } from "@/config/constants";
 import type { Network } from "@/config/networks";
@@ -60,10 +60,7 @@ function buildTrustLineAsset(asset: Asset): xdr.TrustLineAsset {
 
 // ─── Main export ───────────────────────────────────────────────────────────────
 
-export async function getAccountState(
-  address: string,
-  network: Network
-): Promise<AccountState> {
+export async function getAccountState(address: string, network: Network): Promise<AccountState> {
   const server = getRpcServer(network);
 
   // 1. Get sequence number + validate existence via Stellar RPC
@@ -94,16 +91,8 @@ export async function getAccountState(
     const ledgerResp = await server.getLedgerEntries(accountKey);
 
     if (ledgerResp.entries && ledgerResp.entries.length > 0) {
-      const entryVal = ledgerResp.entries[0].val as unknown as {
-        account(): {
-          seqNum(): { toString(): string };
-          balance(): { toString(): string };
-          thresholds(): Buffer;
-          signers(): Array<{ key(): { ed25519(): Buffer }; weight(): number }>;
-          numSubEntries(): number;
-        };
-      };
-      const accountEntry = entryVal.account();
+      const entryData = ledgerResp.entries[0].val as xdr.LedgerEntryData;
+      const accountEntry = entryData.account();
 
       const rawBalance = BigInt(accountEntry.balance().toString());
       nativeBalanceLumens = (Number(rawBalance) / STROOPS_PER_XLM).toFixed(7);
@@ -122,10 +111,11 @@ export async function getAccountState(
         })),
       ];
 
-      numSubEntries = accountEntry.numSubEntries();
+      numSubEntries = Number(accountEntry.numSubEntries());
     }
   } catch (err) {
-    if (process.env.NODE_ENV !== "production") console.warn("[account] LedgerEntry XDR parse failed, using defaults:", err);
+    if (process.env.NODE_ENV !== "production")
+      console.warn("[account] LedgerEntry XDR parse failed, using defaults:", err);
   }
 
   // 3. Enumerate assets + data entries from SE API
@@ -141,15 +131,14 @@ export async function getAccountState(
       value,
     }));
   } catch (err) {
-    if (process.env.NODE_ENV !== "production") console.warn("[account] SE API account fetch failed:", err);
+    if (process.env.NODE_ENV !== "production")
+      console.warn("[account] SE API account fetch failed:", err);
   }
 
   try {
-    const offersPage = await seGet<SeOffersPage>(
-      network,
-      `/account/${address}/offers`,
-      { limit: "200" }
-    );
+    const offersPage = await seGet<SeOffersPage>(network, `/account/${address}/offers`, {
+      limit: "200",
+    });
     openOffers = (offersPage._embedded?.records ?? []).map((o) => ({
       id: String(o.id),
       selling: seAssetStr(o.selling),
@@ -158,7 +147,9 @@ export async function getAccountState(
       price: o.price,
     }));
   } catch (err) {
-    if (process.env.NODE_ENV !== "production") console.warn("[account] SE API offers fetch failed:", err);
+    const is404 = err instanceof SeApiError && err.status === 404;
+    if (!is404 && process.env.NODE_ENV !== "production")
+      console.warn("[account] SE API offers fetch failed:", err);
   }
 
   // 4. Fetch trustline balances via getLedgerEntries (one call per asset)
@@ -182,14 +173,8 @@ export async function getAccountState(
         continue;
       }
 
-      const tlData = tlResp.entries[0].val as unknown as {
-        trustLine(): {
-          balance(): { toString(): string };
-          limit(): { toString(): string };
-          flags(): number;
-        };
-      };
-      const tl = tlData.trustLine();
+      const entryData = tlResp.entries[0].val as xdr.LedgerEntryData;
+      const tl = entryData.trustLine();
 
       const balStroops = BigInt(tl.balance().toString());
       const limitStroops = BigInt(tl.limit().toString());
@@ -199,7 +184,8 @@ export async function getAccountState(
 
       trustlines.push({ asset: `${code}:${issuer}`, balance, limit, authorized, issuer, code });
     } catch (err) {
-      if (process.env.NODE_ENV !== "production") console.warn(`[account] trustline fetch failed for ${code}:${issuer}:`, err);
+      if (process.env.NODE_ENV !== "production")
+        console.warn(`[account] trustline fetch failed for ${code}:${issuer}:`, err);
     }
   }
 
