@@ -2,12 +2,44 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronRight, Copy, Check } from "lucide-react";
+import type { Network } from "@/config/networks";
 
 interface XdrPreviewModalProps {
   xdr: string;
+  network: Network;
 }
 
-export default function XdrPreviewModal({ xdr }: XdrPreviewModalProps) {
+const LAB_NET_CONFIG: Record<
+  Network,
+  { id: string; label: string; horizonUrl: string; rpcUrl: string; passphrase: string }
+> = {
+  testnet: {
+    id: "testnet",
+    label: "Testnet",
+    horizonUrl: "https:////horizon-testnet.stellar.org",
+    rpcUrl: "https:////soroban-testnet.stellar.org",
+    passphrase: "Test%20SDF%20Network%20/;%20September%202015",
+  },
+  public: {
+    id: "mainnet",
+    label: "Mainnet",
+    horizonUrl: "https:////horizon.stellar.org",
+    rpcUrl: "https:////soroban.stellar.org",
+    passphrase: "Public%20Global%20Stellar%20Network%20/;%20September%202015",
+  },
+};
+
+function buildLabXdrUrl(xdr: string, network: Network): string {
+  const cfg = LAB_NET_CONFIG[network];
+  const escapedXdr = xdr.replace(/\//g, "//");
+  return (
+    `https://lab.stellar.org/xdr/view?$=network$id=${cfg.id}&label=${cfg.label}` +
+    `&horizonUrl=${cfg.horizonUrl}&rpcUrl=${cfg.rpcUrl}&passphrase=${cfg.passphrase};` +
+    `&xdr$blob=${escapedXdr};;`
+  );
+}
+
+export default function XdrPreviewModal({ xdr, network }: XdrPreviewModalProps) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -24,7 +56,11 @@ export default function XdrPreviewModal({ xdr }: XdrPreviewModalProps) {
         className="w-full flex items-center justify-between px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-colors"
       >
         <span className="flex items-center gap-1.5">
-          {open ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
+          {open ? (
+            <ChevronDown className="h-3.5 w-3.5" />
+          ) : (
+            <ChevronRight className="h-3.5 w-3.5" />
+          )}
           View raw transaction (XDR)
         </span>
       </button>
@@ -35,12 +71,12 @@ export default function XdrPreviewModal({ xdr }: XdrPreviewModalProps) {
             <p className="text-xs text-muted-foreground">
               Base64-encoded XDR envelope. You can inspect this in{" "}
               <a
-                href="https://laboratory.stellar.org/#xdr-viewer"
+                href={buildLabXdrUrl(xdr, network)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-stellar hover:underline"
               >
-                Stellar Laboratory
+                Stellar Lab
               </a>
               .
             </p>
@@ -49,9 +85,13 @@ export default function XdrPreviewModal({ xdr }: XdrPreviewModalProps) {
               className="shrink-0 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
               {copied ? (
-                <><Check className="h-3 w-3 text-emerald-500" /> Copied</>
+                <>
+                  <Check className="h-3 w-3 text-emerald-500" /> Copied
+                </>
               ) : (
-                <><Copy className="h-3 w-3" /> Copy</>
+                <>
+                  <Copy className="h-3 w-3" /> Copy
+                </>
               )}
             </button>
           </div>

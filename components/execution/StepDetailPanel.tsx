@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { CheckCircle, AlertCircle, ExternalLink } from "lucide-react";
 import type { PlannedStep } from "@/types/plan";
 import type { Network } from "@/config/networks";
-import { SE_EXPLORER_BASE } from "@/config/networks";
+import { SE_EXPLORER_BASE, SV_EXPLORER_BASE } from "@/config/networks";
 import { cn } from "@/lib/utils/cn";
 import SecretKeyInput from "@/components/account-entry/SecretKeyInput";
 import XdrPreviewModal from "./XdrPreviewModal";
@@ -41,17 +41,17 @@ export default function StepDetailPanel({
   const [confirmed, setConfirmed] = useState(false);
   const [keyValid, setKeyValid] = useState(false);
   const explorerBase = SE_EXPLORER_BASE[network];
+  const svExplorerBase = SV_EXPLORER_BASE[network];
 
-  const isExecuting =
-    step.status === "signing" || step.status === "submitted";
+  const isExecuting = step.status === "signing" || step.status === "submitted";
   const isMerge = step.type === "MERGE";
   const canSign = confirmed && keyValid && !isExecuting;
 
   const confirmText = isMerge
     ? "I have verified the destination address and understand that this account will be merged and removed from the Stellar ledger."
     : step.type === "FUND_MEDIATOR"
-    ? "I understand a temporary intermediary account will be created to route my funds to the destination."
-    : `I understand this will ${step.description.toLowerCase()}`;
+      ? "I understand a temporary intermediary account will be created to route my funds to the destination."
+      : `I understand this will ${step.description.toLowerCase()}`;
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
@@ -66,7 +66,9 @@ export default function StepDetailPanel({
 
       {/* Meta */}
       <div className="border-b border-border px-5 py-3 flex gap-6 text-xs text-muted-foreground">
-        <span>{step.operationCount} operation{step.operationCount !== 1 ? "s" : ""}</span>
+        <span>
+          {step.operationCount} operation{step.operationCount !== 1 ? "s" : ""}
+        </span>
         <span>~{step.estimatedFeeLumens} XLM fee</span>
         {step.affectedAsset && <span>Asset: {step.affectedAsset.split(":")[0]}</span>}
       </div>
@@ -78,15 +80,25 @@ export default function StepDetailPanel({
             <CheckCircle className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-medium text-emerald-400 mb-1">Step confirmed</p>
-              <a
-                href={`${explorerBase}/tx/${step.txHash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-stellar transition-colors font-mono"
-              >
-                {step.txHash.slice(0, 20)}...{step.txHash.slice(-8)}
-                <ExternalLink className="h-3 w-3" />
-              </a>
+              <div className="flex items-center gap-3">
+                <a
+                  href={`${explorerBase}/tx/${step.txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-stellar transition-colors font-mono"
+                >
+                  {step.txHash.slice(0, 20)}...{step.txHash.slice(-8)}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+                <a
+                  href={`${svExplorerBase}/tx/${step.txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-stellar transition-colors shrink-0"
+                >
+                  StellarView <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
             </div>
           </div>
         )}
@@ -98,10 +110,7 @@ export default function StepDetailPanel({
               <AlertCircle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
               <p className="text-sm text-destructive">{step.error}</p>
             </div>
-            <button
-              onClick={onRetry}
-              className="text-xs text-stellar hover:underline"
-            >
+            <button onClick={onRetry} className="text-xs text-stellar hover:underline">
               Retry this step
             </button>
           </div>
@@ -117,14 +126,14 @@ export default function StepDetailPanel({
                   This action is permanent and irreversible.
                 </p>
                 <p className="text-muted-foreground">
-                  After this step, the account will be removed from the Stellar ledger.
-                  Verify your destination address carefully before signing.
+                  After this step, the account will be removed from the Stellar ledger. Verify your
+                  destination address carefully before signing.
                 </p>
               </div>
             )}
 
             {/* XDR preview */}
-            {step.txXdr && <XdrPreviewModal xdr={step.txXdr} />}
+            {step.txXdr && <XdrPreviewModal xdr={step.txXdr} network={network} />}
 
             {/* Secret key */}
             <SecretKeyInput
