@@ -7,7 +7,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Account Demolisher",
-  description: "Safely close your Stellar account and recover locked XLM reserves",
+  description: "Wind down a Stellar account via Account Merge: recover locked XLM reserves, remove trustlines, cancel open offers, and transfer your balance non-custodially.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -82,7 +82,7 @@ export function buildPlan(
           batches.length > 1
             ? `Cancel DEX offers (batch ${i + 1}/${batches.length})`
             : "Cancel open DEX offers",
-          `Cancel ${batch.length} open order${batch.length === 1 ? "" : "s"} on the Stellar DEX.`,
+          `Cancel ${batch.length} open offer${batch.length === 1 ? "" : "s"} on the Stellar DEX.`,
           batch.length
         )
       );
@@ -114,7 +114,7 @@ export function buildPlan(
           batches.length > 1
             ? `Remove trustlines (batch ${i + 1}/${batches.length})`
             : "Remove trustlines",
-          `Remove ${batch.length} trustline${batch.length === 1 ? "" : "s"} to recover the XLM reserve.`,
+          `Remove ${batch.length} trustline${batch.length === 1 ? "" : "s"} to recover the base reserve.`,
           batch.length
         )
       );
@@ -139,8 +139,8 @@ export function buildPlan(
       "MERGE",
       mediatorRequired ? "Merge account into intermediary" : "Merge account",
       mediatorRequired
-        ? "Close this account permanently and transfer all remaining XLM to the intermediary, which will forward it to your destination."
-        : "Close this account permanently and transfer all remaining XLM to your destination address.",
+        ? "Merge this account into the intermediary account, which will then transfer the XLM balance to your destination."
+        : "Merge this account, transferring the XLM balance to the destination account and removing it from the Stellar ledger.",
       1
     )
   );

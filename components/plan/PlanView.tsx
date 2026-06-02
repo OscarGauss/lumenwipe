@@ -60,8 +60,8 @@ export default function PlanView({
           <p className="text-muted-foreground">
             Your destination does not support direct account merges. A temporary
             intermediary account will be created to route your funds. A 1.5 XLM reserve
-            is required upfront — approximately 1.0 XLM will remain permanently locked
-            in the intermediary as a ledger reserve and cannot be recovered.
+            is required upfront — approximately 1.0 XLM will remain locked as the
+            the intermediary&apos;s minimum balance and cannot be recovered.
           </p>
         </div>
       )}

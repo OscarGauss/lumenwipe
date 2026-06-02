@@ -62,11 +62,11 @@ export default function AccountEntryForm() {
   return (
     <div className="space-y-6">
       <AddressInput
-        label="Account to close"
+        label="Source account"
         value={source}
         onChange={setSource}
-        placeholder="G... (the account you want to demolish)"
-        helpText="The Stellar account you want to permanently close and recover reserves from."
+        placeholder="G... (the account to merge)"
+        helpText="The source account to merge. All subentry reserves (trustlines, offers, data entries) will be recovered to the destination."
         required
       />
 
@@ -81,7 +81,7 @@ export default function AccountEntryForm() {
         value={destination}
         onChange={setDestination}
         placeholder="G... (where to send your XLM)"
-        helpText="All XLM from the closed account will be sent here. This can be an exchange address."
+        helpText="All XLM from the merged account will be transferred here. This can be an exchange address."
         required
       />
 

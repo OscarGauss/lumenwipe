@@ -31,7 +31,7 @@ export default function NavBar({ network }: NavBarProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setHistoryOpen(true)}
-              title="Closure history"
+              title="Merge history"
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <History className="h-4 w-4" />

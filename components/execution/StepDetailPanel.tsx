@@ -48,7 +48,7 @@ export default function StepDetailPanel({
   const canSign = confirmed && keyValid && !isExecuting;
 
   const confirmText = isMerge
-    ? "I have verified the destination address and I understand this account will be permanently closed."
+    ? "I have verified the destination address and understand that this account will be merged and removed from the Stellar ledger."
     : step.type === "FUND_MEDIATOR"
     ? "I understand a temporary intermediary account will be created to route my funds to the destination."
     : `I understand this will ${step.description.toLowerCase()}`;
@@ -117,7 +117,7 @@ export default function StepDetailPanel({
                   This action is permanent and irreversible.
                 </p>
                 <p className="text-muted-foreground">
-                  After this step, the account will no longer exist on the Stellar ledger.
+                  After this step, the account will be removed from the Stellar ledger.
                   Verify your destination address carefully before signing.
                 </p>
               </div>

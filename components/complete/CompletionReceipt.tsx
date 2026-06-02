@@ -52,7 +52,7 @@ export default function CompletionReceipt({ network }: CompletionReceiptProps) {
       {/* Success banner */}
       <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-6 text-center">
         <CheckCircle className="h-12 w-12 text-emerald-500 mx-auto mb-3" />
-        <h2 className="text-xl font-bold mb-1">Account successfully closed</h2>
+        <h2 className="text-xl font-bold mb-1">Account successfully merged</h2>
         <p className="text-sm text-muted-foreground">
           All assets have been transferred and the account has been removed from the Stellar ledger.
         </p>
@@ -88,7 +88,7 @@ export default function CompletionReceipt({ network }: CompletionReceiptProps) {
       {/* Summary */}
       <div className="bg-card border border-border rounded-xl p-4 space-y-3">
         <div className="flex justify-between text-sm">
-          <span className="text-muted-foreground">Closed account</span>
+          <span className="text-muted-foreground">Source account</span>
           <span className="font-mono-address text-xs">
             {sourceAddress?.slice(0, 8)}...{sourceAddress?.slice(-8)}
           </span>
@@ -108,7 +108,7 @@ export default function CompletionReceipt({ network }: CompletionReceiptProps) {
       {/* History saved notice */}
       <div className="flex items-start gap-2.5 bg-secondary/30 border border-border rounded-lg p-3 text-xs text-muted-foreground">
         <History className="h-4 w-4 shrink-0 mt-0.5 text-stellar" />
-        Receipt saved to local history. You can review past closures anytime from the history icon in the navigation bar.
+        Receipt saved to local history. You can review past merges anytime from the history icon in the navigation bar.
       </div>
 
       {/* Actions */}
@@ -117,7 +117,7 @@ export default function CompletionReceipt({ network }: CompletionReceiptProps) {
           onClick={reset}
           className="flex-1 py-2.5 px-4 rounded-lg border border-border text-sm font-medium hover:bg-secondary/30 transition-colors"
         >
-          Close another account
+          Merge another account
         </button>
         <Link
           href={`${explorerBase}/account/${destinationAddress}`}
