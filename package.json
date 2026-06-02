@@ -8,6 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "type-check": "tsc --noEmit && tsc -p tests/tsconfig.json --noEmit",
     "test": "bun test tests/unit",
     "test:watch": "bun test --watch tests/unit",
@@ -42,7 +44,9 @@
     "autoprefixer": "^10.5.0",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.5.19",
+    "eslint-config-prettier": "^10.1.8",
     "postcss": "^8.5.15",
+    "prettier": "^3.8.3",
     "tailwindcss": "^3.4.19",
     "typescript": "^5.9.3"
   }
