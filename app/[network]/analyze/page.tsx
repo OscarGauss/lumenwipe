@@ -8,7 +8,6 @@ import type { Network } from "@/config/networks";
 import type { AccountState } from "@/types/account";
 import type { PlannedStep } from "@/types/plan";
 import { useDemolishStore } from "@/store/demolish";
-import { useNetworkStore } from "@/store/network";
 import { buildPlan } from "@/lib/stellar/tx-builder";
 import { createMediatorSession } from "@/lib/stellar/mediator-session";
 import PlanView from "@/components/plan/PlanView";
@@ -17,7 +16,6 @@ export default function AnalyzePage({ params }: { params: Promise<{ network: Net
   const { network: routeNetwork } = use(params);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const network = useNetworkStore((s) => s.network);
 
   const source = searchParams.get("source");
   const dest = searchParams.get("dest");
@@ -50,8 +48,8 @@ export default function AnalyzePage({ params }: { params: Promise<{ network: Net
 
     try {
       const [accountRes, mediatorRes] = await Promise.all([
-        fetch(`/api/${network}/account/${effectiveSource}`),
-        fetch(`/api/${network}/mediator/check/${effectiveDest}`),
+        fetch(`/api/${routeNetwork}/account/${effectiveSource}`),
+        fetch(`/api/${routeNetwork}/mediator/check/${effectiveDest}`),
       ]);
 
       if (!accountRes.ok) {
@@ -83,7 +81,15 @@ export default function AnalyzePage({ params }: { params: Promise<{ network: Net
     } finally {
       setLoading(false);
     }
-  }, [effectiveSource, effectiveDest, network, routeNetwork, router, setAccountState, setAddresses, syncMediatorToStore]);
+  }, [
+    effectiveSource,
+    effectiveDest,
+    routeNetwork,
+    router,
+    setAccountState,
+    setAddresses,
+    syncMediatorToStore,
+  ]);
 
   useEffect(() => {
     fetchData();

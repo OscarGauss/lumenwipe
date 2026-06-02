@@ -10,11 +10,7 @@ export default function ExecutionPlanList({ steps, activeIndex }: ExecutionPlanL
   return (
     <div className="space-y-2">
       {steps.map((step) => (
-        <StepCard
-          key={step.index}
-          step={step}
-          isActive={step.index === activeIndex}
-        />
+        <StepCard key={step.index} step={step} isActive={step.index === activeIndex} />
       ))}
     </div>
   );

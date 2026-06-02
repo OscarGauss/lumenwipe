@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { CheckCircle, ExternalLink, History } from "lucide-react";
 import Link from "next/link";
 import type { Network } from "@/config/networks";
-import { SE_EXPLORER_BASE } from "@/config/networks";
+import { SE_EXPLORER_BASE, SV_EXPLORER_BASE } from "@/config/networks";
 import { useDemolishStore } from "@/store/demolish";
 import { cleanupSession } from "@/lib/session/recovery";
 import { saveHistory } from "@/lib/session/history";
@@ -15,13 +15,11 @@ interface CompletionReceiptProps {
 }
 
 export default function CompletionReceipt({ network }: CompletionReceiptProps) {
-  const { executionPlan, destinationAddress, sourceAddress, sessionId, reset } =
-    useDemolishStore();
+  const { executionPlan, destinationAddress, sourceAddress, sessionId, reset } = useDemolishStore();
   const explorerBase = SE_EXPLORER_BASE[network];
+  const svExplorerBase = SV_EXPLORER_BASE[network];
 
-  const confirmedSteps = executionPlan.filter(
-    (s) => s.status === "confirmed" && s.txHash
-  );
+  const confirmedSteps = executionPlan.filter((s) => s.status === "confirmed" && s.txHash);
 
   const totalFee = executionPlan
     .reduce((sum, s) => sum + parseFloat(s.estimatedFeeLumens), 0)
@@ -42,9 +40,11 @@ export default function CompletionReceipt({ network }: CompletionReceiptProps) {
         txHash: s.txHash!,
       })),
       totalFeeLumens: totalFee,
-      usedMediator: executionPlan.some((s) => s.type === "FUND_MEDIATOR" && s.status === "confirmed"),
+      usedMediator: executionPlan.some(
+        (s) => s.type === "FUND_MEDIATOR" && s.status === "confirmed"
+      ),
     }).then(() => cleanupSession(sessionId));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
   return (
@@ -72,14 +72,24 @@ export default function CompletionReceipt({ network }: CompletionReceiptProps) {
                   {step.txHash?.slice(0, 20)}...
                 </p>
               </div>
-              <a
-                href={`${explorerBase}/tx/${step.txHash}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-stellar hover:underline"
-              >
-                View <ExternalLink className="h-3 w-3" />
-              </a>
+              <div className="flex items-center gap-2">
+                <a
+                  href={`${explorerBase}/tx/${step.txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs text-stellar hover:underline"
+                >
+                  SE <ExternalLink className="h-3 w-3" />
+                </a>
+                <a
+                  href={`${svExplorerBase}/tx/${step.txHash}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs text-stellar hover:underline"
+                >
+                  SV <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
             </div>
           ))}
         </div>
@@ -108,7 +118,8 @@ export default function CompletionReceipt({ network }: CompletionReceiptProps) {
       {/* History saved notice */}
       <div className="flex items-start gap-2.5 bg-secondary/30 border border-border rounded-lg p-3 text-xs text-muted-foreground">
         <History className="h-4 w-4 shrink-0 mt-0.5 text-stellar" />
-        Receipt saved to local history. You can review past merges anytime from the history icon in the navigation bar.
+        Receipt saved to local history. You can review past merges anytime from the history icon in
+        the navigation bar.
       </div>
 
       {/* Actions */}
@@ -125,7 +136,16 @@ export default function CompletionReceipt({ network }: CompletionReceiptProps) {
           rel="noopener noreferrer"
           className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-lg bg-stellar text-black text-sm font-semibold hover:bg-stellar/90 transition-colors"
         >
-          View destination
+          Stellar Expert
+          <ExternalLink className="h-3.5 w-3.5" />
+        </Link>
+        <Link
+          href={`${svExplorerBase}/account/${destinationAddress}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-lg bg-stellar text-black text-sm font-semibold hover:bg-stellar/90 transition-colors"
+        >
+          StellarView
           <ExternalLink className="h-3.5 w-3.5" />
         </Link>
       </div>

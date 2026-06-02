@@ -5,10 +5,7 @@ import { isValidGAddress } from "@/lib/utils/validation";
 import { getAccountState } from "@/lib/stellar/account";
 import { buildFundMediatorTx } from "@/lib/stellar/tx-builder/merge";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ network: string }> }
-) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ network: string }> }) {
   const { network } = await params;
   if (!isValidNetwork(network)) {
     return NextResponse.json({ error: "Invalid network" }, { status: 400 });

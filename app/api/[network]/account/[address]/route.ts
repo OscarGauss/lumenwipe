@@ -21,10 +21,7 @@ export async function GET(
     // getAccountState fetches offers internally via SE API (with error handling)
     const accountData = await getAccountState(address, network);
 
-    return NextResponse.json(
-      accountData,
-      { headers: { "Cache-Control": "no-store" } }
-    );
+    return NextResponse.json(accountData, { headers: { "Cache-Control": "no-store" } });
   } catch (err) {
     if (err instanceof AccountNotFoundError) {
       return NextResponse.json({ error: err.message }, { status: 404 });

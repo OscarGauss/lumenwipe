@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, Loader2, AlertTriangle } from "lucide-react";
 import { isValidGAddress, isValidMemo } from "@/lib/utils/validation";
@@ -8,7 +8,6 @@ import { useDemolishStore } from "@/store/demolish";
 import { useNetworkStore } from "@/store/network";
 import { getMemoRequirement } from "@/lib/exchange-registry";
 import AddressInput from "./AddressInput";
-import SecretKeyInput from "./SecretKeyInput";
 
 export default function AccountEntryForm() {
   const router = useRouter();
@@ -21,16 +20,12 @@ export default function AccountEntryForm() {
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const secretKeyRef = useRef<string>("");
-  const [keyIsValid, setKeyIsValid] = useState(false);
-
   const memoReq = isValidGAddress(destination) ? getMemoRequirement(destination) : null;
   const memoRequired = memoReq?.requiresMemo ?? false;
   const memoType = memoReq?.memoType ?? "text";
   const memoValid = !memoRequired || (memo.trim().length > 0 && isValidMemo(memo.trim(), memoType));
 
-  const canProceed =
-    isValidGAddress(source) && isValidGAddress(destination) && keyIsValid && memoValid;
+  const canProceed = isValidGAddress(source) && isValidGAddress(destination) && memoValid;
 
   async function handleAnalyze() {
     if (!canProceed) return;
@@ -62,18 +57,12 @@ export default function AccountEntryForm() {
   return (
     <div className="space-y-6">
       <AddressInput
-        label="Source account"
+        label="Account to close"
         value={source}
         onChange={setSource}
         placeholder="G... (the account to merge)"
         helpText="The source account to merge. All subentry reserves (trustlines, offers, data entries) will be recovered to the destination."
         required
-      />
-
-      <SecretKeyInput
-        label="Secret key for this account"
-        secretKeyRef={secretKeyRef as React.MutableRefObject<string>}
-        onValidityChange={setKeyIsValid}
       />
 
       <AddressInput

@@ -17,9 +17,9 @@ export default function AccountSummaryCard({
 }: AccountSummaryCardProps) {
   const recoverableXlm = calcRecoverableReserve(account.numSubEntries);
   const estimatedFinal = (
-    parseFloat(account.nativeBalanceLumens)
-    - parseFloat(totalFee)
-    - (mediatorRequired ? 1.0 : 0)
+    parseFloat(account.nativeBalanceLumens) -
+    parseFloat(totalFee) -
+    (mediatorRequired ? 1.0 : 0)
   ).toFixed(7);
 
   const stats = [

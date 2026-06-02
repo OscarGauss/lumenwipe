@@ -12,7 +12,10 @@ export default function CompletePage({ params }: { params: Promise<{ network: Ne
   const { phase, executionPlan } = useDemolishStore();
 
   useEffect(() => {
-    if (phase !== "COMPLETE" && executionPlan.filter((s) => s.status === "confirmed").length === 0) {
+    if (
+      phase !== "COMPLETE" &&
+      executionPlan.filter((s) => s.status === "confirmed").length === 0
+    ) {
       router.replace(`/${network}`);
     }
   }, [phase, executionPlan, network, router]);

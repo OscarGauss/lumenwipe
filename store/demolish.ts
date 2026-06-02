@@ -69,10 +69,7 @@ export const useDemolishStore = create<DemolishState>((set) => ({
   setAccountState: (accountState) =>
     set({
       accountState,
-      requiredSignatureCount: Math.max(
-        1,
-        accountState.thresholds.med
-      ),
+      requiredSignatureCount: Math.max(1, accountState.thresholds.med),
     }),
 
   setPlan: (executionPlan) => set({ executionPlan }),
@@ -84,9 +81,7 @@ export const useDemolishStore = create<DemolishState>((set) => ({
 
   updateStep: (index, patch) =>
     set((state) => ({
-      executionPlan: state.executionPlan.map((s) =>
-        s.index === index ? { ...s, ...patch } : s
-      ),
+      executionPlan: state.executionPlan.map((s) => (s.index === index ? { ...s, ...patch } : s)),
     })),
 
   markStepConfirmed: (index, txHash) =>

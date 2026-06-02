@@ -39,16 +39,11 @@ export default function HomePage({ params }: { params: Promise<{ network: Networ
             <RotateCcw className="h-4 w-4 text-stellar shrink-0" />
             <span className="text-muted-foreground truncate">
               In-progress account merge found for{" "}
-              <span className="font-mono text-xs">
-                {session.sourceAddress.slice(0, 8)}…
-              </span>
+              <span className="font-mono text-xs">{session.sourceAddress.slice(0, 8)}…</span>
             </span>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={handleResume}
-              className="text-stellar font-medium hover:underline"
-            >
+            <button onClick={handleResume} className="text-stellar font-medium hover:underline">
               Resume
             </button>
             <button
@@ -67,13 +62,10 @@ export default function HomePage({ params }: { params: Promise<{ network: Networ
           <ShieldCheck className="h-3.5 w-3.5 text-stellar" />
           Non-custodial · Client-side signing only
         </div>
-        <h1 className="text-3xl font-bold tracking-tight mb-3">
-          Merge your Stellar account
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight mb-3">Merge your Stellar account</h1>
         <p className="text-muted-foreground text-base leading-relaxed max-w-lg mx-auto">
-          Safely wind down a Stellar account and recover all locked XLM reserves.
-          Remove trustlines, cancel offers, and merge your account in a guided,
-          step-by-step process.
+          Safely wind down a Stellar account and recover all locked XLM reserves. Remove trustlines,
+          cancel offers, and merge your account in a guided, step-by-step process.
         </p>
       </div>
 
@@ -99,10 +91,9 @@ export default function HomePage({ params }: { params: Promise<{ network: Networ
       <div className="flex items-start gap-2.5 bg-warning/10 border border-warning/20 rounded-lg p-3 mb-8 text-sm">
         <AlertOctagon className="h-4 w-4 text-warning mt-0.5 shrink-0" />
         <p className="text-muted-foreground">
-          <span className="text-warning font-medium">Irreversible action.</span>{" "}
-          An Account Merge transfers the XLM balance to the destination and removes the
-          source account from the Stellar ledger. Make sure you have a working
-          destination address before proceeding.
+          <span className="text-warning font-medium">Irreversible action.</span> An Account Merge
+          transfers the XLM balance to the destination and removes the source account from the
+          Stellar ledger. Make sure you have a working destination address before proceeding.
         </p>
       </div>
 

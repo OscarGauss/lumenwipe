@@ -27,10 +27,7 @@ function step(
   };
 }
 
-export function buildPlan(
-  accountState: AccountState,
-  mediatorRequired: boolean
-): PlannedStep[] {
+export function buildPlan(accountState: AccountState, mediatorRequired: boolean): PlannedStep[] {
   const steps: PlannedStep[] = [];
   let idx = 0;
 

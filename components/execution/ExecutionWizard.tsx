@@ -16,21 +16,13 @@ export default function ExecutionWizard({ network }: ExecutionWizardProps) {
   const router = useRouter();
   const secretKeyRef = useRef<string>("");
 
-  const {
-    executionPlan,
-    currentStepIndex,
-    setCurrentStepIndex,
-    setPhase,
-    updateStep,
-    phase,
-  } = useDemolishStore();
+  const { executionPlan, currentStepIndex, setCurrentStepIndex, setPhase, updateStep, phase } =
+    useDemolishStore();
 
   const { executeStep, progressStatus, buildStepXdr } = useStepExecution();
 
   const currentStep = executionPlan[currentStepIndex];
-  const allDone =
-    executionPlan.length > 0 &&
-    executionPlan.every((s) => s.status === "confirmed");
+  const allDone = executionPlan.length > 0 && executionPlan.every((s) => s.status === "confirmed");
 
   // Auto-advance when a step is confirmed
   useEffect(() => {

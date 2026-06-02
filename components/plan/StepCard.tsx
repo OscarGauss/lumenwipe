@@ -30,27 +30,21 @@ export default function StepCard({ step, isActive, onClick }: StepCardProps) {
         isActive
           ? "border-stellar/50 bg-stellar/5"
           : step.status === "confirmed"
-          ? "border-emerald-500/20 bg-emerald-500/5"
-          : step.status === "failed"
-          ? "border-destructive/30 bg-destructive/5"
-          : "border-border bg-card hover:bg-secondary/30",
+            ? "border-emerald-500/20 bg-emerald-500/5"
+            : step.status === "failed"
+              ? "border-destructive/30 bg-destructive/5"
+              : "border-border bg-card hover:bg-secondary/30",
         onClick && "cursor-pointer"
       )}
     >
       {/* Status icon */}
       <div className="mt-0.5 shrink-0">
-        {step.status === "confirmed" && (
-          <CheckCircle className="h-4 w-4 text-emerald-500" />
-        )}
-        {step.status === "failed" && (
-          <AlertCircle className="h-4 w-4 text-destructive" />
-        )}
+        {step.status === "confirmed" && <CheckCircle className="h-4 w-4 text-emerald-500" />}
+        {step.status === "failed" && <AlertCircle className="h-4 w-4 text-destructive" />}
         {(step.status === "signing" || step.status === "submitted") && (
           <Loader2 className="h-4 w-4 text-stellar animate-spin" />
         )}
-        {step.status === "pending" && (
-          <Clock className="h-4 w-4 text-muted-foreground" />
-        )}
+        {step.status === "pending" && <Clock className="h-4 w-4 text-muted-foreground" />}
       </div>
 
       {/* Content */}
@@ -69,7 +63,8 @@ export default function StepCard({ step, isActive, onClick }: StepCardProps) {
         <p className="text-xs text-muted-foreground line-clamp-2">{step.description}</p>
         <div className="flex items-center gap-3 mt-1.5">
           <span className="text-xs text-muted-foreground/70">
-            {step.operationCount} op{step.operationCount !== 1 ? "s" : ""} · {step.estimatedFeeLumens} XLM fee
+            {step.operationCount} op{step.operationCount !== 1 ? "s" : ""} ·{" "}
+            {step.estimatedFeeLumens} XLM fee
           </span>
           {step.txHash && (
             <span className="text-xs text-emerald-500 font-mono truncate">

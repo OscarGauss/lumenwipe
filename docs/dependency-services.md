@@ -83,6 +83,7 @@ OctoPos is developed by Untangled Finance and is a production extension of the p
 **Base URL:** `https://stellar.untangled.finance` (production)
 
 **Protocol Coverage:**
+
 - Blend (supply, borrow, backstop, health factor, V1 and V2)
 - Aquarius AMM (LP positions, AQUA rewards)
 - Soroswap (LP positions)
@@ -93,12 +94,12 @@ OctoPos is developed by Untangled Finance and is a production extension of the p
 
 The Account Demolisher uses the following OctoPos endpoints:
 
-| OctoPos Endpoint | Account Demolisher Usage |
-|---|---|
-| `GET /positions/:address/summary` | Pre-flight account analysis, total DeFi exposure |
-| `GET /positions/:address/protocols` | Per-protocol position detail for plan construction |
-| `GET /positions/:address/history` | Not used in the demolish flow; available for future features |
-| `GET /protocols/stats` | Protocol availability check (health monitoring) |
+| OctoPos Endpoint                    | Account Demolisher Usage                                     |
+| ----------------------------------- | ------------------------------------------------------------ |
+| `GET /positions/:address/summary`   | Pre-flight account analysis, total DeFi exposure             |
+| `GET /positions/:address/protocols` | Per-protocol position detail for plan construction           |
+| `GET /positions/:address/history`   | Not used in the demolish flow; available for future features |
+| `GET /protocols/stats`              | Protocol availability check (health monitoring)              |
 
 ### 3.3 Data Freshness Requirements
 
@@ -123,6 +124,7 @@ Orion is developed by Daccred and provides a ledger-pinned DeFi positions API wi
 **Base URL:** `https://orion.daccred.co` (production)
 
 **Protocol Coverage:**
+
 - Blend (supply, borrow, backstop, health factor, V1 and V2)
 - Aquarius AMM (LP positions)
 - Soroswap (LP positions)
@@ -133,11 +135,11 @@ Orion is developed by Daccred and provides a ledger-pinned DeFi positions API wi
 
 The Account Demolisher uses the following Orion endpoints:
 
-| Orion Endpoint | Account Demolisher Usage |
-|---|---|
-| `GET /v1/users/:address/positions` | Pre-flight analysis and plan construction |
-| `GET /v1/users/:address/activities` | Not used in the demolish flow |
-| `GET /v1/health` | Provider availability check |
+| Orion Endpoint                      | Account Demolisher Usage                  |
+| ----------------------------------- | ----------------------------------------- |
+| `GET /v1/users/:address/positions`  | Pre-flight analysis and plan construction |
+| `GET /v1/users/:address/activities` | Not used in the demolish flow             |
+| `GET /v1/health`                    | Provider availability check               |
 
 ### 4.3 Orion-Specific Adapter Notes
 
@@ -178,6 +180,7 @@ Query OctoPos (5-second timeout)
 ```
 
 In degraded mode:
+
 - Classic Stellar operations proceed normally.
 - The `defiPositions` field in the analysis response is set to `{ "error": "unavailable", "protocols": [] }`.
 - The plan view shows a warning banner explaining that DeFi positions could not be loaded.
@@ -223,10 +226,10 @@ The registry is updated by a maintainer pull request whenever a protocol deploys
 
 The Account Demolisher's backend does not guarantee position data availability beyond what the underlying DeFi position APIs provide. The expected availability of the dependency services, as stated in their respective RFP submissions, is:
 
-| Service | Stated SLA |
-|---|---|
-| OctoPos (Tranche 3) | 99.5% uptime |
-| Orion (Tranche 3) | 99% load test success rate |
+| Service             | Stated SLA                 |
+| ------------------- | -------------------------- |
+| OctoPos (Tranche 3) | 99.5% uptime               |
+| Orion (Tranche 3)   | 99% load test success rate |
 
 Given these SLAs, the dual-provider fallback strategy ensures that DeFi position data is unavailable only when both providers simultaneously experience an outage. The probability of this is significantly lower than either provider's individual downtime rate.
 

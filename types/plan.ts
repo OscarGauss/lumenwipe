@@ -8,13 +8,7 @@ export type StepType =
   | "FUND_MEDIATOR"
   | "MERGE";
 
-export type StepStatus =
-  | "pending"
-  | "signing"
-  | "submitted"
-  | "confirmed"
-  | "failed"
-  | "skipped";
+export type StepStatus = "pending" | "signing" | "submitted" | "confirmed" | "failed" | "skipped";
 
 export interface PlannedStep {
   index: number;

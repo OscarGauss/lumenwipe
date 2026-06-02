@@ -37,16 +37,16 @@ The Account Demolisher is structured as two loosely coupled layers: a stateless 
 
 ### 2.1 Technology Stack
 
-| Layer | Choice | Rationale |
-|---|---|---|
-| Framework | Next.js 14 (App Router) | SSR for initial load performance; static export compatible |
-| Language | TypeScript 5.x | Type safety critical for transaction construction |
-| Stellar SDK | `@stellar/stellar-sdk` 12.x | Official SDK; supports both classic and Soroban |
-| Wallet integration | `@stellar/stellar-wallets-kit` | Unified interface across ecosystem wallets |
-| State management | Zustand | Lightweight; suited for multi-step wizard state |
-| UI components | Radix UI + Tailwind CSS | Accessible primitives; no opinionated styling lock-in |
-| Package manager | Bun 1.x | Fast installs, built-in workspace support, native TypeScript runner |
-| Testing | Bun test + Playwright | Unit and end-to-end |
+| Layer              | Choice                         | Rationale                                                           |
+| ------------------ | ------------------------------ | ------------------------------------------------------------------- |
+| Framework          | Next.js 14 (App Router)        | SSR for initial load performance; static export compatible          |
+| Language           | TypeScript 5.x                 | Type safety critical for transaction construction                   |
+| Stellar SDK        | `@stellar/stellar-sdk` 12.x    | Official SDK; supports both classic and Soroban                     |
+| Wallet integration | `@stellar/stellar-wallets-kit` | Unified interface across ecosystem wallets                          |
+| State management   | Zustand                        | Lightweight; suited for multi-step wizard state                     |
+| UI components      | Radix UI + Tailwind CSS        | Accessible primitives; no opinionated styling lock-in               |
+| Package manager    | Bun 1.x                        | Fast installs, built-in workspace support, native TypeScript runner |
+| Testing            | Bun test + Playwright          | Unit and end-to-end                                                 |
 
 ### 2.2 Application State Machine
 
@@ -106,14 +106,14 @@ Secret keys entered in the advanced mode are stored only in component-local Reac
 
 ### 3.1 Technology Stack
 
-| Layer | Choice |
-|---|---|
-| Runtime | Node.js 20 LTS |
-| Framework | Fastify 4.x |
-| Language | TypeScript 5.x |
-| Caching | Redis (30-second TTL for position data) |
-| Ledger indexer | Custom indexer built on Galexie CDP + Captive Core |
-| Deployment | Docker + Kubernetes (or equivalent managed container service) |
+| Layer          | Choice                                                        |
+| -------------- | ------------------------------------------------------------- |
+| Runtime        | Node.js 20 LTS                                                |
+| Framework      | Fastify 4.x                                                   |
+| Language       | TypeScript 5.x                                                |
+| Caching        | Redis (30-second TTL for position data)                       |
+| Ledger indexer | Custom indexer built on Galexie CDP + Captive Core            |
+| Deployment     | Docker + Kubernetes (or equivalent managed container service) |
 
 ### 3.2 Endpoints
 
@@ -191,23 +191,23 @@ The indexer exposes an internal REST API consumed only by the backend service. I
 
 Transaction submission uses Stellar RPC's `sendTransaction` method rather than Horizon's transaction submission endpoint. Post-submission confirmation polling uses `getTransaction` via Stellar RPC.
 
-| Concern | Source |
-|---|---|
-| Current account state | Captive Core (indexed, hot path) |
-| Historical backfill / recovery | Galexie CDP (cold path) |
-| Transaction submission | Stellar RPC (`sendTransaction`) |
-| Transaction confirmation | Stellar RPC (`getTransaction`) |
-| Soroban contract state reads | Stellar RPC (`getLedgerEntries`) |
+| Concern                        | Source                              |
+| ------------------------------ | ----------------------------------- |
+| Current account state          | Captive Core (indexed, hot path)    |
+| Historical backfill / recovery | Galexie CDP (cold path)             |
+| Transaction submission         | Stellar RPC (`sendTransaction`)     |
+| Transaction confirmation       | Stellar RPC (`getTransaction`)      |
+| Soroban contract state reads   | Stellar RPC (`getLedgerEntries`)    |
 | Soroban transaction simulation | Stellar RPC (`simulateTransaction`) |
 
 ### 3.5 Caching Strategy
 
-| Data type | TTL | Invalidation |
-|---|---|---|
-| DeFi positions | 30 seconds | Address-keyed; explicit on user request |
-| Routing paths | 15 seconds | None (routing is time-sensitive) |
+| Data type        | TTL        | Invalidation                            |
+| ---------------- | ---------- | --------------------------------------- |
+| DeFi positions   | 30 seconds | Address-keyed; explicit on user request |
+| Routing paths    | 15 seconds | None (routing is time-sensitive)        |
 | Account analysis | 10 seconds | Explicit on each user-initiated refresh |
-| Mediator status | 5 minutes | None |
+| Mediator status  | 5 minutes  | None                                    |
 
 ---
 

@@ -81,11 +81,13 @@ export default function SecretKeyInput({
           )}
         />
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-          {touched && displayValue && (
-            isValid
-              ? <CheckCircle className="h-4 w-4 text-emerald-500" />
-              : <XCircle className="h-4 w-4 text-destructive" />
-          )}
+          {touched &&
+            displayValue &&
+            (isValid ? (
+              <CheckCircle className="h-4 w-4 text-emerald-500" />
+            ) : (
+              <XCircle className="h-4 w-4 text-destructive" />
+            ))}
           <button
             type="button"
             onClick={() => setShowKey((v) => !v)}
@@ -98,7 +100,9 @@ export default function SecretKeyInput({
       </div>
 
       {showError && (
-        <p className="text-xs text-destructive">Not a valid Stellar secret key (must start with S)</p>
+        <p className="text-xs text-destructive">
+          Not a valid Stellar secret key (must start with S)
+        </p>
       )}
 
       <p className="flex items-start gap-1.5 text-xs text-muted-foreground">

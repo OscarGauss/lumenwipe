@@ -8,12 +8,12 @@ The Account Demolisher handles one of the most sensitive operations possible on 
 
 ### 1.1 Assets at Risk
 
-| Asset | Value | Risk Vectors |
-|---|---|---|
-| Private key | Total account control | Interception, exfiltration, XSS, phishing |
-| Signed transaction | One-time execution of plan | Relay attack, MITM, unauthorized broadcast |
-| Account balance | XLM and all tokens | Destination tampering, slippage manipulation |
-| Transaction memo | Required for CEX attribution | Tampering leading to lost funds at exchange |
+| Asset              | Value                        | Risk Vectors                                 |
+| ------------------ | ---------------------------- | -------------------------------------------- |
+| Private key        | Total account control        | Interception, exfiltration, XSS, phishing    |
+| Signed transaction | One-time execution of plan   | Relay attack, MITM, unauthorized broadcast   |
+| Account balance    | XLM and all tokens           | Destination tampering, slippage manipulation |
+| Transaction memo   | Required for CEX attribution | Tampering leading to lost funds at exchange  |
 
 ### 1.2 Attacker Profiles
 

@@ -20,10 +20,7 @@ function assetStr(a: SeOffer["selling"]): string {
   return `${a.asset_code}:${a.asset_issuer}`;
 }
 
-export async function fetchOpenOffers(
-  address: string,
-  network: Network
-): Promise<OpenOffer[]> {
+export async function fetchOpenOffers(address: string, network: Network): Promise<OpenOffer[]> {
   let data: SeOffersResponse;
   try {
     data = await seGet<SeOffersResponse>(network, `/account/${address}/offers`, {

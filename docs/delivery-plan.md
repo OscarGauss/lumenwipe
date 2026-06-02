@@ -6,11 +6,11 @@
 
 The project is delivered in three tranches. Each tranche produces a working, deployable artifact and has explicit acceptance criteria that can be independently verified. The tranches are cumulative: each one builds on the previous rather than replacing it.
 
-| Tranche | Phase | Duration | Focus |
-|---|---|---|---|
-| 1 | MVP | Weeks 1 to 5 | Core classic operations, backend service, testnet deployment |
-| 2 | Soroban Integration | Weeks 6 to 10 | Full DeFi protocol support, Soroban transaction builder |
-| 3 | Production Hardening | Weeks 11 to 14 | Security audit, production deployment, documentation, final UX |
+| Tranche | Phase                | Duration       | Focus                                                          |
+| ------- | -------------------- | -------------- | -------------------------------------------------------------- |
+| 1       | MVP                  | Weeks 1 to 5   | Core classic operations, backend service, testnet deployment   |
+| 2       | Soroban Integration  | Weeks 6 to 10  | Full DeFi protocol support, Soroban transaction builder        |
+| 3       | Production Hardening | Weeks 11 to 14 | Security audit, production deployment, documentation, final UX |
 
 ---
 
@@ -35,16 +35,16 @@ The project is delivered in three tranches. Each tranche produces a working, dep
 
 ### 2.2 Acceptance Criteria
 
-| Criterion | Measurement |
-|---|---|
+| Criterion                  | Measurement                                                                                                                                                                            |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Classic operation coverage | All 7 classic steps (signer removal, data entry removal, offer cancellation, claimable balance claim, asset conversion, trustline removal, account merge) execute correctly on testnet |
-| Multisig support | An account with med threshold 2 and 2 extra signers can be demolished by providing both keys |
-| Mediator flow | A demolish into a destination account correctly uses the mediator flow when `requiresMediator: true` is returned by the backend |
-| Session recovery | A session interrupted after any step can be resumed correctly; completed steps are detected from on-chain state |
-| Error handling | All Stellar Indexer and Soroban RPC error codes produce human-readable messages; no raw error codes or XDR strings are shown to the user |
-| Unit test coverage | Transaction builder module has at least 80% line coverage |
-| Integration tests passing | All testnet integration tests pass in CI |
-| Testnet deployment live | Frontend and backend are publicly accessible on testnet |
+| Multisig support           | An account with med threshold 2 and 2 extra signers can be demolished by providing both keys                                                                                           |
+| Mediator flow              | A demolish into a destination account correctly uses the mediator flow when `requiresMediator: true` is returned by the backend                                                        |
+| Session recovery           | A session interrupted after any step can be resumed correctly; completed steps are detected from on-chain state                                                                        |
+| Error handling             | All Stellar Indexer and Soroban RPC error codes produce human-readable messages; no raw error codes or XDR strings are shown to the user                                               |
+| Unit test coverage         | Transaction builder module has at least 80% line coverage                                                                                                                              |
+| Integration tests passing  | All testnet integration tests pass in CI                                                                                                                                               |
+| Testnet deployment live    | Frontend and backend are publicly accessible on testnet                                                                                                                                |
 
 ### 2.3 Out of Scope for Tranche 1
 
@@ -79,18 +79,18 @@ The project is delivered in three tranches. Each tranche produces a working, dep
 
 ### 3.2 Acceptance Criteria
 
-| Criterion | Measurement |
-|---|---|
-| Blend coverage | Supply, borrow, and backstop positions are correctly detected, unwound, and confirmed on testnet |
-| Aquarius coverage | LP positions are correctly detected and withdrawn on testnet |
-| Soroswap coverage | LP positions detected via factory enumeration; withdrawal succeeds via raw RPC workaround |
-| Phoenix Hub coverage | LP positions detected and withdrawn on testnet |
-| FxDAO coverage | CDP vaults with XLM collateral and USDx debt are correctly closed on testnet |
-| DeFi API fallback | Disabling the OctoPos endpoint causes automatic fallback to Orion within 5 seconds; no user-visible interruption |
-| Allowance inspection | Active allowances granted to known DeFi contract addresses are detected and displayed; revocation transactions succeed on testnet |
-| Soroban fee accuracy | For all Soroban transactions, displayed fee estimate matches submitted fee within 20% |
-| Degraded mode | Disabling both DeFi APIs causes the tool to enter degraded mode with a clear user warning; classic operations proceed unaffected |
-| Integration tests passing | All Soroban integration tests pass in CI on testnet |
+| Criterion                 | Measurement                                                                                                                       |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Blend coverage            | Supply, borrow, and backstop positions are correctly detected, unwound, and confirmed on testnet                                  |
+| Aquarius coverage         | LP positions are correctly detected and withdrawn on testnet                                                                      |
+| Soroswap coverage         | LP positions detected via factory enumeration; withdrawal succeeds via raw RPC workaround                                         |
+| Phoenix Hub coverage      | LP positions detected and withdrawn on testnet                                                                                    |
+| FxDAO coverage            | CDP vaults with XLM collateral and USDx debt are correctly closed on testnet                                                      |
+| DeFi API fallback         | Disabling the OctoPos endpoint causes automatic fallback to Orion within 5 seconds; no user-visible interruption                  |
+| Allowance inspection      | Active allowances granted to known DeFi contract addresses are detected and displayed; revocation transactions succeed on testnet |
+| Soroban fee accuracy      | For all Soroban transactions, displayed fee estimate matches submitted fee within 20%                                             |
+| Degraded mode             | Disabling both DeFi APIs causes the tool to enter degraded mode with a clear user warning; classic operations proceed unaffected  |
+| Integration tests passing | All Soroban integration tests pass in CI on testnet                                                                               |
 
 ### 3.3 Protocol Coverage Notes
 
@@ -119,16 +119,16 @@ Protocol contract addresses change when new versions are deployed. The backend s
 
 ### 4.2 Acceptance Criteria
 
-| Criterion | Measurement |
-|---|---|
-| Security audit complete | Audit report delivered; all critical/high findings remediated; audit findings published |
-| Mainnet deployment | Production frontend and backend are live and accessible at the canonical URL |
-| CSP verified | No CSP violations in browser console on any user flow; `unsafe-eval` is absent from the policy |
-| Performance: analysis | Account analysis completes within 5 seconds for a testnet account with 500 subentries (measured in CI) |
-| Performance: load test | Backend sustains 100 concurrent requests to `/v1/account/:address/analysis` with zero timeouts over a 60-second run |
-| Open source | Repository is public; Apache 2.0 license file is present; all documentation files are present |
+| Criterion               | Measurement                                                                                                                 |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Security audit complete | Audit report delivered; all critical/high findings remediated; audit findings published                                     |
+| Mainnet deployment      | Production frontend and backend are live and accessible at the canonical URL                                                |
+| CSP verified            | No CSP violations in browser console on any user flow; `unsafe-eval` is absent from the policy                              |
+| Performance: analysis   | Account analysis completes within 5 seconds for a testnet account with 500 subentries (measured in CI)                      |
+| Performance: load test  | Backend sustains 100 concurrent requests to `/v1/account/:address/analysis` with zero timeouts over a 60-second run         |
+| Open source             | Repository is public; Apache 2.0 license file is present; all documentation files are present                               |
 | Mainnet end-to-end test | Manual verification: a real mainnet account (with minimal funds) is successfully demolished using the production deployment |
-| Responsible disclosure | `SECURITY.md` file is present and describes a clear process for reporting vulnerabilities |
+| Responsible disclosure  | `SECURITY.md` file is present and describes a clear process for reporting vulnerabilities                                   |
 
 ---
 
@@ -140,4 +140,3 @@ After the final tranche is delivered, the project enters a maintenance phase wit
 - DeFi protocol contract registry is updated within 5 business days of a new protocol version deployment.
 - New DeFi protocols supported by the DeFi Position API (OctoPos / Orion) are evaluated for integration on a quarterly basis.
 - The open-source repository accepts community pull requests under the standard contribution guidelines published in `CONTRIBUTING.md`.
-

@@ -33,10 +33,10 @@ export default function PlanSidebar({ steps, currentIndex }: PlanSidebarProps) {
               isActive
                 ? "bg-stellar/10 border border-stellar/30 text-foreground"
                 : step.status === "confirmed"
-                ? "text-emerald-400/70"
-                : step.status === "failed"
-                ? "text-destructive/70"
-                : "text-muted-foreground"
+                  ? "text-emerald-400/70"
+                  : step.status === "failed"
+                    ? "text-destructive/70"
+                    : "text-muted-foreground"
             )}
           >
             {/* Status dot */}
@@ -44,9 +44,7 @@ export default function PlanSidebar({ steps, currentIndex }: PlanSidebarProps) {
               {step.status === "confirmed" && (
                 <CheckCircle className="h-3.5 w-3.5 text-emerald-500" />
               )}
-              {step.status === "failed" && (
-                <AlertCircle className="h-3.5 w-3.5 text-destructive" />
-              )}
+              {step.status === "failed" && <AlertCircle className="h-3.5 w-3.5 text-destructive" />}
               {(step.status === "signing" || step.status === "submitted") && (
                 <Loader2 className="h-3.5 w-3.5 text-stellar animate-spin" />
               )}
@@ -60,9 +58,7 @@ export default function PlanSidebar({ steps, currentIndex }: PlanSidebarProps) {
               {step.title}
             </span>
 
-            {isActive && (
-              <ChevronRight className="h-3.5 w-3.5 text-stellar shrink-0" />
-            )}
+            {isActive && <ChevronRight className="h-3.5 w-3.5 text-stellar shrink-0" />}
           </div>
         );
       })}

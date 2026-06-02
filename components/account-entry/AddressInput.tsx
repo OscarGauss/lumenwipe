@@ -70,9 +70,7 @@ export default function AddressInput({
           Not a valid Stellar address (must start with G)
         </p>
       )}
-      {helpText && !showError && (
-        <p className="text-xs text-muted-foreground">{helpText}</p>
-      )}
+      {helpText && !showError && <p className="text-xs text-muted-foreground">{helpText}</p>}
     </div>
   );
 }

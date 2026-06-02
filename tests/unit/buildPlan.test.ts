@@ -117,7 +117,14 @@ test("buildPlan › open offers → CANCEL_OFFERS step", () => {
 test("buildPlan › trustline with balance → CONVERT_ASSETS before REMOVE_TRUSTLINES", () => {
   const account = makeAccount({
     trustlines: [
-      { asset: "USDC:GABC123", balance: "100.0", limit: "1000", authorized: true, issuer: "GABC123", code: "USDC" },
+      {
+        asset: "USDC:GABC123",
+        balance: "100.0",
+        limit: "1000",
+        authorized: true,
+        issuer: "GABC123",
+        code: "USDC",
+      },
     ],
   });
   const plan = buildPlan(account, false);
@@ -131,7 +138,14 @@ test("buildPlan › trustline with balance → CONVERT_ASSETS before REMOVE_TRUS
 test("buildPlan › CONVERT_ASSETS step includes affectedAsset", () => {
   const account = makeAccount({
     trustlines: [
-      { asset: "USDC:GABC123", balance: "50.0", limit: "1000", authorized: true, issuer: "GABC123", code: "USDC" },
+      {
+        asset: "USDC:GABC123",
+        balance: "50.0",
+        limit: "1000",
+        authorized: true,
+        issuer: "GABC123",
+        code: "USDC",
+      },
     ],
   });
   const plan = buildPlan(account, false);
@@ -142,7 +156,14 @@ test("buildPlan › CONVERT_ASSETS step includes affectedAsset", () => {
 test("buildPlan › trustline with zero balance → no CONVERT_ASSETS", () => {
   const account = makeAccount({
     trustlines: [
-      { asset: "USDC:GABC123", balance: "0", limit: "1000", authorized: true, issuer: "GABC123", code: "USDC" },
+      {
+        asset: "USDC:GABC123",
+        balance: "0",
+        limit: "1000",
+        authorized: true,
+        issuer: "GABC123",
+        code: "USDC",
+      },
     ],
   });
   const plan = buildPlan(account, false);
@@ -153,7 +174,14 @@ test("buildPlan › trustline with zero balance → no CONVERT_ASSETS", () => {
 test("buildPlan › trustline with zero balance → still has REMOVE_TRUSTLINES", () => {
   const account = makeAccount({
     trustlines: [
-      { asset: "USDC:GABC123", balance: "0", limit: "1000", authorized: true, issuer: "GABC123", code: "USDC" },
+      {
+        asset: "USDC:GABC123",
+        balance: "0",
+        limit: "1000",
+        authorized: true,
+        issuer: "GABC123",
+        code: "USDC",
+      },
     ],
   });
   const plan = buildPlan(account, false);
@@ -176,7 +204,14 @@ test("buildPlan › all steps start with status 'pending'", () => {
   const account = makeAccount({
     dataEntries: [{ key: "k1", value: "" }],
     trustlines: [
-      { asset: "USDC:GABC123", balance: "0", limit: "1000", authorized: true, issuer: "GABC123", code: "USDC" },
+      {
+        asset: "USDC:GABC123",
+        balance: "0",
+        limit: "1000",
+        authorized: true,
+        issuer: "GABC123",
+        code: "USDC",
+      },
     ],
   });
   const plan = buildPlan(account, false);
@@ -203,7 +238,14 @@ test("buildPlan › complex account has all expected step types", () => {
     dataEntries: [{ key: "k1", value: "" }],
     openOffers: [{ id: "1", selling: "native", buying: "USDC:G", amount: "1", price: "1" }],
     trustlines: [
-      { asset: "USDC:GABC123", balance: "50.0", limit: "1000", authorized: true, issuer: "GABC123", code: "USDC" },
+      {
+        asset: "USDC:GABC123",
+        balance: "50.0",
+        limit: "1000",
+        authorized: true,
+        issuer: "GABC123",
+        code: "USDC",
+      },
     ],
   });
   const plan = buildPlan(account, false);

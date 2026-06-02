@@ -34,14 +34,14 @@ Returns a complete pre-flight analysis of the given Stellar account. This is the
 
 **Path parameters:**
 
-| Parameter | Type | Description |
-|---|---|---|
+| Parameter | Type   | Description                                              |
+| --------- | ------ | -------------------------------------------------------- |
 | `address` | string | Stellar account G-address (56 characters, starts with G) |
 
 **Query parameters:**
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
+| Parameter | Type   | Default   | Description            |
+| --------- | ------ | --------- | ---------------------- |
 | `network` | string | `mainnet` | `mainnet` or `testnet` |
 
 **Example request:**
@@ -137,13 +137,13 @@ GET /v1/account/GABC...XYZ/analysis?network=mainnet
 
 **Error responses:**
 
-| Status | Code | Description |
-|---|---|---|
-| 400 | `INVALID_ADDRESS` | The provided address is not a valid Stellar G-address |
-| 404 | `ACCOUNT_NOT_FOUND` | No account exists at the given address on the specified network |
-| 429 | `RATE_LIMITED` | Rate limit exceeded |
-| 502 | `INDEXER_UNAVAILABLE` | Stellar Indexer returned an error; retry with exponential backoff |
-| 504 | `DEFI_API_TIMEOUT` | DeFi Position API did not respond within 5 seconds; analysis is partial |
+| Status | Code                  | Description                                                             |
+| ------ | --------------------- | ----------------------------------------------------------------------- |
+| 400    | `INVALID_ADDRESS`     | The provided address is not a valid Stellar G-address                   |
+| 404    | `ACCOUNT_NOT_FOUND`   | No account exists at the given address on the specified network         |
+| 429    | `RATE_LIMITED`        | Rate limit exceeded                                                     |
+| 502    | `INDEXER_UNAVAILABLE` | Stellar Indexer returned an error; retry with exponential backoff       |
+| 504    | `DEFI_API_TIMEOUT`    | DeFi Position API did not respond within 5 seconds; analysis is partial |
 
 When a `504` is returned, the response body still includes all non-DeFi fields. The `defiPositions` field contains `{ "source": null, "error": "timeout", "protocols": [] }`.
 
@@ -157,16 +157,16 @@ Returns normalized DeFi position data across all supported protocols. This endpo
 
 **Path parameters:**
 
-| Parameter | Type | Description |
-|---|---|---|
+| Parameter | Type   | Description                    |
+| --------- | ------ | ------------------------------ |
 | `address` | string | Stellar G-address or C-address |
 
 **Query parameters:**
 
-| Parameter | Type | Default | Description |
-|---|---|---|---|
-| `network` | string | `mainnet` | `mainnet` or `testnet` |
-| `refresh` | boolean | `false` | If `true`, bypass the cache and fetch fresh data |
+| Parameter | Type    | Default   | Description                                      |
+| --------- | ------- | --------- | ------------------------------------------------ |
+| `network` | string  | `mainnet` | `mainnet` or `testnet`                           |
+| `refresh` | boolean | `false`   | If `true`, bypass the cache and fetch fresh data |
 
 **Response schema:**
 
@@ -223,12 +223,12 @@ Returns the best available conversion path for a given asset pair and amount. Us
 
 **Query parameters:**
 
-| Parameter | Type | Required | Description |
-|---|---|---|---|
-| `fromAsset` | string | Yes | Asset code and issuer, e.g. `USDC:GA5Z...` or `native` for XLM |
-| `toAsset` | string | Yes | Target asset, same format |
-| `amount` | string | Yes | Amount to convert (as a decimal string) |
-| `network` | string | No | `mainnet` or `testnet` (default: `mainnet`) |
+| Parameter   | Type   | Required | Description                                                    |
+| ----------- | ------ | -------- | -------------------------------------------------------------- |
+| `fromAsset` | string | Yes      | Asset code and issuer, e.g. `USDC:GA5Z...` or `native` for XLM |
+| `toAsset`   | string | Yes      | Target asset, same format                                      |
+| `amount`    | string | Yes      | Amount to convert (as a decimal string)                        |
+| `network`   | string | No       | `mainnet` or `testnet` (default: `mainnet`)                    |
 
 **Example request:**
 
@@ -246,10 +246,7 @@ GET /v1/routing/convert?fromAsset=USDC:GA5Z...&toAsset=native&amount=250.0000000
   "estimatedReceiveAmount": "998.4230000",
   "minimumReceiveAmount": "993.4308850",
   "slippageTolerance": "0.005",
-  "path": [
-    "USDC:GA5Z...",
-    "native"
-  ],
+  "path": ["USDC:GA5Z...", "native"],
   "source": "stellar_dex",
   "queryLedger": 52831440,
   "queryTimestamp": "2026-05-12T14:23:01Z",
@@ -283,8 +280,8 @@ Determines whether the given destination address requires a mediator account for
 
 **Path parameters:**
 
-| Parameter | Type | Description |
-|---|---|---|
+| Parameter            | Type   | Description                                   |
+| -------------------- | ------ | --------------------------------------------- |
 | `destinationAddress` | string | The G-address where merged funds will be sent |
 
 **Response schema:**
@@ -396,29 +393,29 @@ All error responses follow a consistent schema:
 }
 ```
 
-| Field | Description |
-|---|---|
-| `code` | Machine-readable error code (uppercase, underscore-separated) |
-| `message` | Human-readable description suitable for display to end users |
-| `details` | Optional structured details, present for validation errors |
+| Field       | Description                                                          |
+| ----------- | -------------------------------------------------------------------- |
+| `code`      | Machine-readable error code (uppercase, underscore-separated)        |
+| `message`   | Human-readable description suitable for display to end users         |
+| `details`   | Optional structured details, present for validation errors           |
 | `requestId` | Unique identifier for this request, useful for support and debugging |
 
 ---
 
 ## 4. Common Error Codes
 
-| Code | HTTP Status | Description |
-|---|---|---|
-| `INVALID_ADDRESS` | 400 | The address parameter is not a valid Stellar G-address |
-| `INVALID_ASSET` | 400 | An asset parameter is malformed |
-| `INVALID_AMOUNT` | 400 | An amount parameter is not a valid positive decimal |
-| `ACCOUNT_NOT_FOUND` | 404 | The account does not exist on the specified network |
-| `BALANCE_NOT_FOUND` | 404 | A referenced claimable balance does not exist |
-| `RATE_LIMITED` | 429 | Rate limit exceeded; retry after the timestamp in `X-RateLimit-Reset` |
-| `INDEXER_ERROR` | 502 | Stellar Indexer returned an unexpected error |
-| `INDEXER_UNAVAILABLE` | 503 | Stellar Indexer is unreachable |
-| `DEFI_API_TIMEOUT` | 504 | DeFi Position API (both primary and fallback) did not respond within timeout |
-| `INTERNAL_ERROR` | 500 | Unexpected internal server error; a `requestId` is always present |
+| Code                  | HTTP Status | Description                                                                  |
+| --------------------- | ----------- | ---------------------------------------------------------------------------- |
+| `INVALID_ADDRESS`     | 400         | The address parameter is not a valid Stellar G-address                       |
+| `INVALID_ASSET`       | 400         | An asset parameter is malformed                                              |
+| `INVALID_AMOUNT`      | 400         | An amount parameter is not a valid positive decimal                          |
+| `ACCOUNT_NOT_FOUND`   | 404         | The account does not exist on the specified network                          |
+| `BALANCE_NOT_FOUND`   | 404         | A referenced claimable balance does not exist                                |
+| `RATE_LIMITED`        | 429         | Rate limit exceeded; retry after the timestamp in `X-RateLimit-Reset`        |
+| `INDEXER_ERROR`       | 502         | Stellar Indexer returned an unexpected error                                 |
+| `INDEXER_UNAVAILABLE` | 503         | Stellar Indexer is unreachable                                               |
+| `DEFI_API_TIMEOUT`    | 504         | DeFi Position API (both primary and fallback) did not respond within timeout |
+| `INTERNAL_ERROR`      | 500         | Unexpected internal server error; a `requestId` is always present            |
 
 ---
 

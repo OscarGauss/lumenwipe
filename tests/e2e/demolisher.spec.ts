@@ -63,7 +63,7 @@ test("source address input rejects invalid input visually", async ({ page }) => 
 test("exchange destination shows memo field requirement", async ({ page }) => {
   await page.goto("/testnet");
 
-  // Coinbase Deposits address — verified in Stellar Expert directory as coinbase.com, memo-required
+  // Coinbase Deposits address - verified in Stellar Expert directory as coinbase.com, memo-required
   const coinbaseAddress = "GB5CLRWUCBQ6DFK2LR5ZMWJ7QCVEB3XKMPTQUYCDIYB4DRZJBEW6M26D";
   await page.getByPlaceholder(/G\.\.\. \(where to send your XLM\)/).fill(coinbaseAddress);
 

@@ -18,9 +18,7 @@ export function buildRemoveDataEntriesTx(
 
   for (const entry of entries) {
     // Setting value to null removes the data entry
-    builder.addOperation(
-      Operation.manageData({ name: entry.key, value: null })
-    );
+    builder.addOperation(Operation.manageData({ name: entry.key, value: null }));
   }
 
   return builder.build().toEnvelope().toXDR("base64");

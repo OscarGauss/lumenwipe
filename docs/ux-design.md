@@ -57,6 +57,7 @@ An alternative to manual address entry is provided via a "Connect Wallet" button
 After analysis completes (typically 3 to 8 seconds), the user sees a full plan overview organized into clearly labeled sections:
 
 **Account Summary card:**
+
 - Current balance in XLM.
 - Number of subentries (trustlines, offers, data entries, signers).
 - Estimated total recoverable reserve in XLM.
@@ -65,6 +66,7 @@ After analysis completes (typically 3 to 8 seconds), the user sees a full plan o
 **Execution Plan list:**
 
 Each planned step is shown as a numbered card with:
+
 - Step title (e.g., "Remove extra signers", "Cancel 3 DEX offers", "Exit Blend borrow position").
 - Estimated fee for this step.
 - A brief description of the operation.
@@ -101,6 +103,7 @@ This step only appears if the account requires multisig authorization.
 **What the user sees:**
 
 A clear statement of the account's current signature requirements:
+
 - Current thresholds (low, medium, high).
 - List of all authorized signers with their weights.
 - The minimum number of signers required to authorize operations at the medium threshold.
@@ -125,6 +128,7 @@ Below this, a signer collection panel with one of two modes:
 The execution view shows the full plan list on the left side with the current step highlighted. The right side shows the active step in detail:
 
 **Step detail panel:**
+
 - Step title and description.
 - The specific entries or positions that will be modified.
 - Estimated fee in XLM.
@@ -153,6 +157,7 @@ The step is marked as complete with a confirmation notice showing the transactio
 **On failure:**
 
 The error is displayed in plain language with a suggested action. Common errors have specific messages:
+
 - Insufficient fee: "The network fee was higher than estimated. Increase the fee tolerance and retry."
 - Timeout: "The transaction was not confirmed within 30 seconds. You can safely retry; it has not been submitted to the ledger."
 - Simulation failure: "The transaction simulation failed. [Reason translated from XDR]. Review the step details and contact support if the issue persists."
@@ -166,6 +171,7 @@ The merge step is treated separately from the other steps because it is the most
 **What the user sees:**
 
 A full-screen confirmation screen (not a panel) with:
+
 - A prominent heading: "Final step: this account will be permanently closed."
 - The source address.
 - The destination address (highlighted; the user should verify this carefully).
@@ -176,6 +182,7 @@ A full-screen confirmation screen (not a panel) with:
 The "Sign and Submit Merge" button is disabled until the checkbox is checked.
 
 If a mediator account is required:
+
 - The mediator flow is described in plain language: "Because the destination does not support ACCOUNT_MERGE, a temporary intermediary account will be used. Your funds will be transferred to the intermediary, and then forwarded to the destination in a separate transaction. The intermediary will retain 1 XLM as its minimum reserve."
 - The mediator address is shown so the user can verify on a block explorer if desired.
 
@@ -186,6 +193,7 @@ If a mediator account is required:
 **What the user sees:**
 
 A receipt screen with:
+
 - "Account successfully closed" heading.
 - The merge transaction hash (linked to StellarExpert).
 - The mediator forward transaction hash (if a mediator was used).
@@ -206,6 +214,7 @@ An address entry field (or wallet connection button). On submission, the tool qu
 **Results view:**
 
 A table showing:
+
 - Token name and symbol.
 - Spender contract address and recognized protocol name (if known).
 - Approved spending amount.
@@ -220,6 +229,7 @@ Each row has a "Revoke" button. Clicking it opens a confirmation modal and, if c
 If the user has a partially completed session (stored in IndexedDB), a "Resume Session" banner appears at the top of the home screen. Clicking it restores the plan view with completed steps greyed out and the next pending step highlighted.
 
 The session includes:
+
 - Source and destination addresses.
 - Network.
 - Completed step indices and their transaction hashes.

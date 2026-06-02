@@ -11,10 +11,17 @@ import { saveSession } from "@/lib/session/store";
 import { fetchConversionPath } from "@/lib/se-api/paths";
 import { buildRemoveDataEntriesTx } from "@/lib/stellar/tx-builder/data-entries";
 import { buildCancelOffersTx } from "@/lib/stellar/tx-builder/offers";
-import { buildConvertAssetTx, buildSendToIssuerTx } from "@/lib/stellar/tx-builder/asset-conversion";
+import {
+  buildConvertAssetTx,
+  buildSendToIssuerTx,
+} from "@/lib/stellar/tx-builder/asset-conversion";
 import { buildRemoveTrustlinesTx } from "@/lib/stellar/tx-builder/trustlines";
 import { buildNormalizeSignersTx } from "@/lib/stellar/tx-builder/signers";
-import { buildMergeTx, buildFundMediatorTx, buildMediatorMergeTx } from "@/lib/stellar/tx-builder/merge";
+import {
+  buildMergeTx,
+  buildFundMediatorTx,
+  buildMediatorMergeTx,
+} from "@/lib/stellar/tx-builder/merge";
 import { executeMediatorFlow } from "@/lib/stellar/mediator";
 import { getMediatorSession, clearMediatorSession } from "@/lib/stellar/mediator-session";
 import { batchItems } from "@/lib/stellar/tx-builder/batching";
@@ -95,9 +102,19 @@ export function useStepExecution() {
 
   const executeStep = useCallback(
     async (step: PlannedStep, secretKey: string) => {
-      const { markStepConfirmed, markStepFailed, updateStep, setPhase, sessionId,
-        sourceAddress, destinationAddress, memo, mediatorRequired, mediatorPublicKey,
-        executionPlan } = store;
+      const {
+        markStepConfirmed,
+        markStepFailed,
+        updateStep,
+        setPhase,
+        sessionId,
+        sourceAddress,
+        destinationAddress,
+        memo,
+        mediatorRequired,
+        mediatorPublicKey,
+        executionPlan,
+      } = store;
 
       setPhase("STEP_EXECUTING");
       updateStep(step.index, { status: "signing" });
@@ -169,11 +186,7 @@ export function useStepExecution() {
         }
       } catch (err) {
         const message =
-          err instanceof Error
-            ? err.message
-            : typeof err === "string"
-            ? err
-            : (err as { message?: string })?.message ?? JSON.stringify(err);
+          err instanceof Error ? err.message : typeof err === "string" ? err : JSON.stringify(err);
         markStepFailed(step.index, message);
       } finally {
         setProgressStatus(null);
@@ -192,7 +205,7 @@ function getBatchIndex(step: PlannedStep, type: string, plan: PlannedStep[]): nu
 
 /**
  * Fire-and-forget: tells the backend to count this merge.
- * Never blocks the UI — errors are swallowed intentionally.
+ * Never blocks the UI - errors are swallowed intentionally.
  */
 function recordMergeStats(txHash: string, network: string): void {
   fetch("/api/stats/record", {
@@ -200,6 +213,6 @@ function recordMergeStats(txHash: string, network: string): void {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ txHash, network }),
   }).catch(() => {
-    // stats are non-critical — ignore failures
+    // stats are non-critical - ignore failures
   });
 }

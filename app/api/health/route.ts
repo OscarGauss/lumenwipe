@@ -34,8 +34,5 @@ export async function GET() {
 
   const allOk = rpcMainnet === "ok" && rpcTestnet === "ok" && seApi === "ok";
 
-  return NextResponse.json(
-    { rpcMainnet, rpcTestnet, seApi },
-    { status: allOk ? 200 : 503 }
-  );
+  return NextResponse.json({ rpcMainnet, rpcTestnet, seApi }, { status: allOk ? 200 : 503 });
 }

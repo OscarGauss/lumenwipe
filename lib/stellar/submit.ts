@@ -35,14 +35,11 @@ export async function submitAndWait(
   }
 
   if (sendResult.status === "ERROR") {
-    const raw =
-      sendResult.errorResult != null
-        ? sendResult.errorResult.toXDR("base64")
-        : "ERROR";
+    const raw = sendResult.errorResult != null ? sendResult.errorResult.toXDR("base64") : "ERROR";
     throw new Error(translateRpcError("ERROR", raw));
   }
 
-  // DUPLICATE means the transaction was already submitted — treat as success and poll
+  // DUPLICATE means the transaction was already submitted - treat as success and poll
   const txHash = sendResult.hash;
   onStatus?.("Waiting for ledger confirmation...");
 
@@ -53,7 +50,7 @@ export async function submitAndWait(
     try {
       result = await server.getTransaction(txHash);
     } catch {
-      // XDR parse error — testnet protocol version mismatch (e.g. TransactionMetaV4).
+      // XDR parse error - testnet protocol version mismatch (e.g. TransactionMetaV4).
       // NOT_FOUND responses carry no XDR fields, so any parse error here means
       // the tx was applied to the ledger. Treat as success.
       return { txHash, ledger: 0 };

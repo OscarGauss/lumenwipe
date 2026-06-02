@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isValidNetwork } from "@/config/networks";
 import { fetchConversionPath } from "@/lib/se-api/paths";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ network: string }> }
-) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ network: string }> }) {
   const { network } = await params;
   if (!isValidNetwork(network)) {
     return NextResponse.json({ error: "Invalid network" }, { status: 400 });

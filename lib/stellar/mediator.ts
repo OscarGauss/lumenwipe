@@ -51,7 +51,7 @@ export async function executeMediatorFlow(
   onStatus?.("Building forward transaction...");
 
   // Get mediator sequence number and balance.
-  // The Soroban RPC's getAccount parses LedgerEntry XDR — if testnet runs a newer
+  // The Soroban RPC's getAccount parses LedgerEntry XDR - if testnet runs a newer
   // protocol version than the SDK knows, this throws "Bad union switch: N".
   // Fall back to SE API (plain JSON, no XDR parsing) in that case.
   const { seGet } = await import("@/lib/se-api/client");
@@ -68,22 +68,27 @@ export async function executeMediatorFlow(
     const mediatorRpcAccount = await server.getAccount(mediator.publicKey);
     mediatorSeq = mediatorRpcAccount.sequenceNumber();
   } catch {
-    // XDR parse error — fall back to SE API for both sequence and balance
+    // XDR parse error - fall back to SE API for both sequence and balance
     const acct = await seGet<SeAccountResp>(network, `/account/${mediator.publicKey}`);
     if (!acct.sequence) {
-      throw new Error("Could not retrieve mediator account sequence. Please retry from the beginning.");
+      throw new Error(
+        "Could not retrieve mediator account sequence. Please retry from the beginning."
+      );
     }
     mediatorSeq = acct.sequence;
-    mediatorBalance = acct.balances?.find((b) => b.asset_type === "native")?.balance ?? mediatorBalance;
+    mediatorBalance =
+      acct.balances?.find((b) => b.asset_type === "native")?.balance ?? mediatorBalance;
     balanceFetched = true;
   }
 
   if (!balanceFetched) {
     try {
       const resp = await seGet<SeAccountResp>(network, `/account/${mediator.publicKey}`);
-      mediatorBalance = resp.balances?.find((b) => b.asset_type === "native")?.balance ?? mediatorBalance;
+      mediatorBalance =
+        resp.balances?.find((b) => b.asset_type === "native")?.balance ?? mediatorBalance;
     } catch (err) {
-      if (process.env.NODE_ENV !== "production") console.warn("[mediator] balance fetch failed, using default:", err);
+      if (process.env.NODE_ENV !== "production")
+        console.warn("[mediator] balance fetch failed, using default:", err);
     }
   }
 

@@ -32,9 +32,7 @@ export default function PlanView({
   const router = useRouter();
   const { setPhase, setPlan, setMediatorRequired } = useDemolishStore();
 
-  const totalFee = plan
-    .reduce((sum, s) => sum + parseFloat(s.estimatedFeeLumens), 0)
-    .toFixed(7);
+  const totalFee = plan.reduce((sum, s) => sum + parseFloat(s.estimatedFeeLumens), 0).toFixed(7);
 
   function handleProceed() {
     setPlan(plan);
@@ -58,10 +56,10 @@ export default function PlanView({
         <div className="bg-card border border-warning/30 rounded-xl p-4 text-sm">
           <p className="font-medium text-warning mb-1">Intermediary account required</p>
           <p className="text-muted-foreground">
-            Your destination does not support direct account merges. A temporary
-            intermediary account will be created to route your funds. A 1.5 XLM reserve
-            is required upfront — approximately 1.0 XLM will remain locked as the
-            the intermediary&apos;s minimum balance and cannot be recovered.
+            Your destination does not support direct account merges. A temporary intermediary
+            account will be created to route your funds. A 1.5 XLM reserve is required upfront -
+            approximately 1.0 XLM will remain locked as the the intermediary&apos;s minimum balance
+            and cannot be recovered.
           </p>
         </div>
       )}

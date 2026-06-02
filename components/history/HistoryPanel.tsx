@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { X, ExternalLink, Trash2, History } from "lucide-react";
-import { SE_EXPLORER_BASE } from "@/config/networks";
+import { SE_EXPLORER_BASE, SV_EXPLORER_BASE } from "@/config/networks";
 import { listHistory, deleteHistoryEntry } from "@/lib/session/history";
 import type { MergeHistoryEntry } from "@/types/history";
 
@@ -31,10 +31,7 @@ export default function HistoryPanel({ onClose }: HistoryPanelProps) {
   return (
     <>
       {/* Overlay */}
-      <div
-        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       {/* Panel */}
       <div className="fixed right-0 top-0 z-50 h-full w-full max-w-sm bg-background border-l border-border flex flex-col shadow-xl">
@@ -52,9 +49,7 @@ export default function HistoryPanel({ onClose }: HistoryPanelProps) {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {!loaded && (
-            <p className="text-sm text-muted-foreground text-center py-12">Loading…</p>
-          )}
+          {!loaded && <p className="text-sm text-muted-foreground text-center py-12">Loading…</p>}
 
           {loaded && entries.length === 0 && (
             <div className="text-center py-12 px-4">
@@ -66,79 +61,95 @@ export default function HistoryPanel({ onClose }: HistoryPanelProps) {
             </div>
           )}
 
-          {loaded && entries.map((entry) => {
-            const explorerBase = SE_EXPLORER_BASE[entry.network];
-            const date = new Date(entry.completedAt).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "short",
-              day: "numeric",
-            });
+          {loaded &&
+            entries.map((entry) => {
+              const explorerBase = SE_EXPLORER_BASE[entry.network];
+              const svExplorerBase = SV_EXPLORER_BASE[entry.network];
+              const date = new Date(entry.completedAt).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              });
 
-            return (
-              <div key={entry.id} className="border-b border-border px-4 py-4 space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="text-xs text-muted-foreground mb-1">{date} · {entry.network}</p>
-                    <p className="text-xs font-mono text-foreground truncate">
-                      {entry.sourceAddress.slice(0, 8)}…{entry.sourceAddress.slice(-6)}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      → {entry.destinationAddress.slice(0, 8)}…{entry.destinationAddress.slice(-6)}
-                    </p>
+              return (
+                <div key={entry.id} className="border-b border-border px-4 py-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground mb-1">
+                        {date} · {entry.network}
+                      </p>
+                      <p className="text-xs font-mono text-foreground truncate">
+                        {entry.sourceAddress.slice(0, 8)}…{entry.sourceAddress.slice(-6)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        → {entry.destinationAddress.slice(0, 8)}…
+                        {entry.destinationAddress.slice(-6)}
+                      </p>
+                    </div>
+
+                    {confirmDelete === entry.id ? (
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => handleDelete(entry.id)}
+                          className="text-xs text-destructive hover:underline"
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelete(null)}
+                          className="text-xs text-muted-foreground hover:underline"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDelete(entry.id)}
+                        className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
                   </div>
 
-                  {confirmDelete === entry.id ? (
-                    <div className="flex items-center gap-2 shrink-0">
-                      <button
-                        onClick={() => handleDelete(entry.id)}
-                        className="text-xs text-destructive hover:underline"
+                  <div className="space-y-1">
+                    {entry.txReceipts.map((receipt) => (
+                      <div
+                        key={receipt.txHash}
+                        className="flex items-center justify-between text-xs"
                       >
-                        Confirm
-                      </button>
-                      <button
-                        onClick={() => setConfirmDelete(null)}
-                        className="text-xs text-muted-foreground hover:underline"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setConfirmDelete(entry.id)}
-                      className="text-muted-foreground hover:text-destructive transition-colors shrink-0"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
+                        <span className="text-muted-foreground truncate max-w-[140px]">
+                          {receipt.title}
+                        </span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <a
+                            href={`${explorerBase}/tx/${receipt.txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-stellar hover:underline"
+                          >
+                            SE <ExternalLink className="h-3 w-3" />
+                          </a>
+                          <a
+                            href={`${svExplorerBase}/tx/${receipt.txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-stellar hover:underline"
+                          >
+                            SV <ExternalLink className="h-3 w-3" />
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
 
-                <div className="space-y-1">
-                  {entry.txReceipts.map((receipt) => (
-                    <a
-                      key={receipt.txHash}
-                      href={`${explorerBase}/tx/${receipt.txHash}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-between text-xs group"
-                    >
-                      <span className="text-muted-foreground group-hover:text-foreground transition-colors truncate max-w-[180px]">
-                        {receipt.title}
-                      </span>
-                      <span className="flex items-center gap-1 text-stellar shrink-0">
-                        {receipt.txHash.slice(0, 8)}…
-                        <ExternalLink className="h-3 w-3" />
-                      </span>
-                    </a>
-                  ))}
+                  <p className="text-xs text-muted-foreground">
+                    Total fees: {entry.totalFeeLumens} XLM
+                    {entry.usedMediator && " · used intermediary"}
+                  </p>
                 </div>
-
-                <p className="text-xs text-muted-foreground">
-                  Total fees: {entry.totalFeeLumens} XLM
-                  {entry.usedMediator && " · used intermediary"}
-                </p>
-              </div>
-            );
-          })}
+              );
+            })}
         </div>
 
         <div className="border-t border-border px-4 py-3">

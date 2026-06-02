@@ -22,7 +22,11 @@ export function assetToSdkAsset(assetStr: string) {
   return new Asset(code, issuer!);
 }
 
-export function sdkAssetToString(asset: { isNative(): boolean; getCode(): string; getIssuer(): string }): string {
+export function sdkAssetToString(asset: {
+  isNative(): boolean;
+  getCode(): string;
+  getIssuer(): string;
+}): string {
   if (asset.isNative()) return "native";
   return `${asset.getCode()}:${asset.getIssuer()}`;
 }
