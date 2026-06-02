@@ -1,16 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { stroopsToXlm } from "@/lib/utils/amounts";
 
 interface Stats {
   testnet: number;
   mainnet: number;
+  testnetXlmStroops: string;
+  mainnetXlmStroops: string;
 }
 
-const NETWORKS: { key: keyof Stats; label: string; sublabel: string }[] = [
-  { key: "testnet", label: "Testnet", sublabel: "accounts closed" },
-  { key: "mainnet", label: "Mainnet", sublabel: "accounts closed" },
+const NETWORKS: { key: keyof Pick<Stats, "testnet" | "mainnet">; label: string }[] = [
+  { key: "testnet", label: "Testnet" },
+  { key: "mainnet", label: "Mainnet" },
 ];
+
+function formatXlmCompact(stroops: string): string {
+  const xlm = parseFloat(stroopsToXlm(stroops));
+  if (isNaN(xlm) || xlm === 0) return "0 XLM";
+  return `${xlm.toLocaleString("en-US", { maximumFractionDigits: 2 })} XLM`;
+}
 
 export default function NetworkStats() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -20,7 +29,7 @@ export default function NetworkStats() {
       const res = await fetch("/api/stats");
       if (res.ok) setStats(await res.json());
     } catch {
-      // non-critical — silently ignore
+      // non-critical - silently ignore
     }
   }
 
@@ -30,27 +39,40 @@ export default function NetworkStats() {
     return () => clearInterval(id);
   }, []);
 
+  const totalStroops = stats ? stats.mainnetXlmStroops : null;
+
   return (
-    <div className="grid grid-cols-2 gap-3 mb-10">
-      {NETWORKS.map(({ key, label, sublabel }) => {
-        const count = stats?.[key];
-        return (
-          <div
-            key={key}
-            className="bg-card border border-border rounded-lg p-4 text-center"
-          >
-            <p className="text-xs text-muted-foreground mb-2">{label}</p>
-            <p className="text-3xl font-bold text-stellar tabular-nums">
-              {count === undefined ? (
-                <span className="inline-block w-8 h-7 bg-border rounded animate-pulse" />
-              ) : (
-                count.toLocaleString()
-              )}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">{sublabel}</p>
-          </div>
-        );
-      })}
+    <div className="space-y-3 mb-10">
+      <div className="grid grid-cols-2 gap-3">
+        {NETWORKS.map(({ key, label }) => {
+          const count = stats?.[key];
+          return (
+            <div key={key} className="bg-card border border-border rounded-lg p-4 text-center">
+              <p className="text-xs text-muted-foreground mb-2">{label}</p>
+              <p className="text-3xl font-bold text-stellar tabular-nums">
+                {count === undefined ? (
+                  <span className="inline-block w-8 h-7 bg-border rounded animate-pulse" />
+                ) : (
+                  count.toLocaleString()
+                )}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">accounts closed</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="bg-card border border-border rounded-lg p-4 text-center">
+        <p className="text-xs text-muted-foreground mb-2">Total Recovered</p>
+        <p className="text-3xl font-bold text-stellar tabular-nums">
+          {totalStroops === null ? (
+            <span className="inline-block w-24 h-7 bg-border rounded animate-pulse" />
+          ) : (
+            formatXlmCompact(totalStroops)
+          )}
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">recovered on mainnet</p>
+      </div>
     </div>
   );
 }
