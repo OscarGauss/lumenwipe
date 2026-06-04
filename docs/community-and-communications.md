@@ -16,12 +16,12 @@ Anyone can read the code, file an issue, propose a change, or self-host the tool
 ## 2. Licensing
 
 - License: Apache 2.0 (permissive, allows reuse and self-hosting, includes a patent grant).
-- Attribution: the project credits and builds upon the public-domain work of stellar.expert/demolisher.
+- Attribution: the project credits and builds upon the public-domain work of [stellar.expert/demolisher](https://stellar.expert/demolisher/public).
 - Dependencies: dependencies are tracked and their licenses are compatible with Apache 2.0.
 
 ## 3. Community updates
 
-The project commits to a regular, public update rhythm so the community and the SCF reviewers can follow progress.
+The project commits to a regular, public update rhythm so the community can follow progress.
 
 - Per tranche: a written milestone update when each tranche's acceptance criteria are met, posted publicly and linked from the repository.
 - Monthly: a short progress note covering what shipped, what is in flight, and any blockers.
@@ -30,7 +30,7 @@ The project commits to a regular, public update rhythm so the community and the 
 
 ## 4. Where the project communicates
 
-The project maintains a presence across both standard ecosystem channels and decentralized, open networks, as the RFP Track suggests.
+The project maintains a presence across both standard ecosystem channels and decentralized, open networks.
 
 | Channel             | Type                        | Use                                                                                                                 |
 | ------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------- |

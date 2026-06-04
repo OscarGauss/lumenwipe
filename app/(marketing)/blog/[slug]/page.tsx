@@ -6,6 +6,7 @@ import { MDXRemote } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 import { getAllSlugs, getPost, extractToc, slugify } from "@/lib/blog";
 import CategoryBadge from "@/components/blog/CategoryBadge";
+import BlogToc from "@/components/blog/BlogToc";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 
@@ -131,11 +132,11 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="max-w-5xl mx-auto px-4 py-10">
+      <div className="max-w-5xl mx-auto px-5 lg:px-8 py-12">
         {/* Breadcrumb */}
         <Link
           href="/blog"
-          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-8"
+          className="inline-flex items-center gap-1.5 mkt-mono text-xs text-white/50 hover:text-white transition-colors mb-8"
         >
           <ArrowLeft className="h-3 w-3" />
           All articles
@@ -145,17 +146,15 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           {/* Article */}
           <article className="flex-1 min-w-0">
             {/* Header */}
-            <header className="mb-8 pb-8 border-b border-border">
+            <header className="mb-8 pb-8 border-b border-white/10">
               <div className="mb-4">
                 <CategoryBadge category={post.category} />
               </div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground leading-tight mb-4 tracking-tight">
+              <h1 className="mkt-display text-3xl md:text-[2.6rem] font-extrabold text-white leading-[1.05] mb-4 tracking-tight">
                 {post.title}
               </h1>
-              <p className="text-muted-foreground text-base leading-relaxed mb-5">
-                {post.description}
-              </p>
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <p className="text-white/55 text-base leading-relaxed mb-5">{post.description}</p>
+              <div className="flex items-center gap-4 mkt-mono text-xs text-white/45">
                 <span className="flex items-center gap-1.5">
                   <Calendar className="h-3 w-3" />
                   {date}
@@ -197,32 +196,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             )}
           </article>
 
-          {/* TOC sidebar */}
-          {toc.length > 0 && (
-            <aside className="hidden lg:block w-52 flex-shrink-0">
-              <div className="sticky top-20">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                  On this page
-                </p>
-                <nav>
-                  <ul className="space-y-1">
-                    {toc.map((entry) => (
-                      <li key={entry.id}>
-                        <a
-                          href={`#${entry.id}`}
-                          className={`block text-xs text-muted-foreground hover:text-foreground transition-colors py-0.5 leading-snug ${
-                            entry.level === 3 ? "pl-3" : ""
-                          }`}
-                        >
-                          {entry.text}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </nav>
-              </div>
-            </aside>
-          )}
+          {/* TOC sidebar with scroll-spy */}
+          <BlogToc toc={toc} />
         </div>
       </div>
     </>
