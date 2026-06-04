@@ -1,0 +1,112 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 480" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+      .h-title { font: 700 22px Inter, system-ui, sans-serif; fill: #0F172A; }
+      .h-sub   { font: 500 13px Inter, system-ui, sans-serif; fill: #64748B; }
+      .lbl     { font: 600 14px Inter, system-ui, sans-serif; fill: #0F172A; }
+      .lbl-sm  { font: 500 11px Inter, system-ui, sans-serif; fill: #475569; }
+      .lbl-xs  { font: 500 10px Inter, system-ui, sans-serif; fill: #64748B; }
+      .indigo-text { fill: #4338CA; }
+      .stellar-text { fill: #0E7490; }
+      .slate-text { fill: #334155; }
+      .step-num { font: 700 11px Inter, system-ui, sans-serif; letter-spacing: 0.08em; }
+    </style>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#475569"/></marker>
+    <marker id="arr-stellar" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#0891B2"/></marker>
+    <marker id="arr-indigo" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#4F46E5"/></marker>
+  </defs>
+
+  <rect width="1280" height="480" fill="#FFFFFF"/>
+
+  <text x="64" y="56" class="h-title">Data flow — discover, verify, then act</text>
+  <text x="64" y="80" class="h-sub">We enumerate from the indexer for speed, then re-read every entry live from Stellar RPC before we sign. No stale data ever reaches the signer.</text>
+
+  <!-- Source account -->
+  <g>
+    <rect x="60" y="190" width="160" height="80" rx="10" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+    <text x="140" y="223" text-anchor="middle" class="lbl slate-text">Source account</text>
+    <text x="140" y="244" text-anchor="middle" class="lbl-xs">G... · the address to wind down</text>
+  </g>
+
+  <!-- Enumerate (top branch) -->
+  <g>
+    <rect x="260" y="100" width="180" height="80" rx="10" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+    <text x="280" y="125" class="step-num slate-text">DISCOVER</text>
+    <text x="350" y="148" text-anchor="middle" class="lbl slate-text">Enumerate</text>
+    <text x="350" y="166" text-anchor="middle" class="lbl-xs">subentries · stellar.expert</text>
+  </g>
+
+  <!-- DeFi query (bottom branch) -->
+  <g>
+    <rect x="260" y="280" width="180" height="80" rx="10" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+    <text x="280" y="305" class="step-num slate-text">DISCOVER</text>
+    <text x="350" y="328" text-anchor="middle" class="lbl slate-text">Detect DeFi</text>
+    <text x="350" y="346" text-anchor="middle" class="lbl-xs">OctoPos · Orion</text>
+  </g>
+
+  <!-- Verify (live re-read) — emphasized -->
+  <g>
+    <rect x="478" y="180" width="200" height="100" rx="12" fill="#ECFEFF" stroke="#0891B2" stroke-width="2.4"/>
+    <text x="498" y="208" class="step-num stellar-text">RE-READ LIVE</text>
+    <text x="578" y="234" text-anchor="middle" class="lbl stellar-text">Verify each entry</text>
+    <text x="578" y="252" text-anchor="middle" class="lbl-xs">Stellar RPC</text>
+    <text x="578" y="266" text-anchor="middle" class="lbl-xs">getLedgerEntries</text>
+  </g>
+
+  <!-- Build plan -->
+  <g>
+    <rect x="708" y="190" width="170" height="80" rx="10" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.8"/>
+    <text x="728" y="215" class="step-num indigo-text">PLAN</text>
+    <text x="793" y="238" text-anchor="middle" class="lbl indigo-text">Build plan</text>
+    <text x="793" y="256" text-anchor="middle" class="lbl-xs">ordered unsigned XDRs</text>
+  </g>
+
+  <!-- Simulate -->
+  <g>
+    <rect x="908" y="190" width="170" height="80" rx="10" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.8"/>
+    <text x="928" y="215" class="step-num stellar-text">SIMULATE</text>
+    <text x="993" y="238" text-anchor="middle" class="lbl stellar-text">Simulate</text>
+    <text x="993" y="256" text-anchor="middle" class="lbl-xs">RPC simulateTransaction</text>
+  </g>
+
+  <!-- Submit -->
+  <g>
+    <rect x="1108" y="190" width="160" height="80" rx="10" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.8"/>
+    <text x="1126" y="215" class="step-num stellar-text">SUBMIT</text>
+    <text x="1188" y="238" text-anchor="middle" class="lbl stellar-text">Submit</text>
+    <text x="1188" y="256" text-anchor="middle" class="lbl-xs">RPC sendTransaction</text>
+  </g>
+
+  <!-- Arrows: source → enum (up curve) -->
+  <path d="M 220 220 C 245 220, 245 140, 258 140" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arr)"/>
+  <!-- source → defiq (down curve) -->
+  <path d="M 220 240 C 245 240, 245 320, 258 320" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arr)"/>
+  <!-- enum → verify (down curve) -->
+  <path d="M 440 140 C 465 140, 465 220, 476 220" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arr)"/>
+  <!-- defiq → verify (up curve) -->
+  <path d="M 440 320 C 465 320, 465 250, 476 250" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arr)"/>
+  <!-- verify → plan -->
+  <line x1="678" y1="230" x2="706" y2="230" stroke="#4F46E5" stroke-width="2" marker-end="url(#arr-indigo)"/>
+  <!-- plan → sim -->
+  <line x1="878" y1="230" x2="906" y2="230" stroke="#0891B2" stroke-width="2" marker-end="url(#arr-stellar)"/>
+  <!-- sim → submit -->
+  <line x1="1078" y1="230" x2="1106" y2="230" stroke="#0891B2" stroke-width="2" marker-end="url(#arr-stellar)"/>
+
+  <!-- Annotation under verify -->
+  <text x="578" y="305" text-anchor="middle" class="lbl-xs stellar-text" font-weight="700">single source of truth before signing</text>
+  <text x="578" y="320" text-anchor="middle" class="lbl-xs">indexer data is treated as a hint, never as final</text>
+
+  <!-- Footer note -->
+  <text x="640" y="430" text-anchor="middle" class="lbl-sm slate-text" font-weight="700">No step depends on cached state. Every action is rebuilt from a fresh live read.</text>
+
+  <!-- Legend -->
+  <g transform="translate(64,420)">
+    <rect x="0" y="-10" width="14" height="14" rx="3" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+    <text x="22" y="1" class="lbl-xs">read-only data</text>
+    <rect x="140" y="-10" width="14" height="14" rx="3" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.5"/>
+    <text x="162" y="1" class="lbl-xs">client / planning</text>
+    <rect x="280" y="-10" width="14" height="14" rx="3" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.5"/>
+    <text x="302" y="1" class="lbl-xs">Stellar network</text>
+  </g>
+</svg>

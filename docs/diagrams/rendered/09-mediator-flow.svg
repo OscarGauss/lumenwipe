@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+      .h-title { font: 700 22px Inter, system-ui, sans-serif; fill: #0F172A; }
+      .h-sub   { font: 500 13px Inter, system-ui, sans-serif; fill: #64748B; }
+      .actor   { font: 700 14px Inter, system-ui, sans-serif; fill: #0F172A; }
+      .actor-sub { font: 500 11px Inter, system-ui, sans-serif; fill: #64748B; }
+      .msg     { font: 600 13px Inter, system-ui, sans-serif; fill: #0F172A; }
+      .msg-sub { font: 500 11px Inter, system-ui, sans-serif; fill: #475569; }
+      .note    { font: 500 12px Inter, system-ui, sans-serif; fill: #334155; }
+      .note-bold { font: 700 12px Inter, system-ui, sans-serif; fill: #0F172A; }
+      .indigo-text { fill: #4338CA; }
+      .stellar-text { fill: #0E7490; }
+      .warn-text { fill: #B45309; }
+      .op { font-family: 'JetBrains Mono', monospace; }
+    </style>
+    <marker id="arr-indigo" markerWidth="12" markerHeight="12" refX="11" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#4F46E5"/></marker>
+    <marker id="arr-warn" markerWidth="12" markerHeight="12" refX="11" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#F59E0B"/></marker>
+    <marker id="arr-stellar" markerWidth="12" markerHeight="12" refX="11" refY="4" orient="auto"><polygon points="0 0, 12 4, 0 8" fill="#0891B2"/></marker>
+  </defs>
+
+  <rect width="1200" height="780" fill="#FFFFFF"/>
+
+  <text x="64" y="56" class="h-title">Mediator flow — sending to an exchange that requires a memo</text>
+  <text x="64" y="80" class="h-sub">AccountMerge cannot carry a memo. We route the recovered XLM through a temporary mediator so the exchange can credit the user.</text>
+
+  <!-- ============ LIFELINES (drawn first so they sit behind everything) ============ -->
+  <line x1="200" y1="180" x2="200" y2="740" stroke="#94A3B8" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <line x1="600" y1="180" x2="600" y2="740" stroke="#94A3B8" stroke-width="1.4" stroke-dasharray="6 5"/>
+  <line x1="1000" y1="180" x2="1000" y2="740" stroke="#94A3B8" stroke-width="1.4" stroke-dasharray="6 5"/>
+
+  <!-- ============ ACTOR HEADERS ============ -->
+  <!-- Source -->
+  <g>
+    <rect x="100" y="110" width="200" height="70" rx="10" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.8"/>
+    <text x="200" y="139" text-anchor="middle" class="actor indigo-text">Source account</text>
+    <text x="200" y="158" text-anchor="middle" class="actor-sub">the account being closed</text>
+    <text x="200" y="172" text-anchor="middle" class="actor-sub op" fill="#4338CA">G… SOURCE</text>
+  </g>
+
+  <!-- Mediator -->
+  <g>
+    <rect x="500" y="110" width="200" height="70" rx="10" fill="#FFFBEB" stroke="#F59E0B" stroke-width="2"/>
+    <text x="600" y="139" text-anchor="middle" class="actor warn-text">Mediator</text>
+    <text x="600" y="158" text-anchor="middle" class="actor-sub warn-text">temporary · disposable</text>
+    <text x="600" y="172" text-anchor="middle" class="actor-sub op" fill="#B45309">G… MED</text>
+  </g>
+
+  <!-- Destination -->
+  <g>
+    <rect x="900" y="110" width="200" height="70" rx="10" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.8"/>
+    <text x="1000" y="139" text-anchor="middle" class="actor stellar-text">Exchange deposit</text>
+    <text x="1000" y="158" text-anchor="middle" class="actor-sub stellar-text">requires memo to credit</text>
+    <text x="1000" y="172" text-anchor="middle" class="actor-sub op" fill="#0E7490">G… EXCHANGE</text>
+  </g>
+
+  <!-- ============ EVENTS ============ -->
+
+  <!-- 1. Note over Source + Mediator: setup -->
+  <g>
+    <rect x="120" y="210" width="560" height="60" rx="8" fill="#FEFCE8" stroke="#FDE047" stroke-width="1.4"/>
+    <text x="400" y="232" text-anchor="middle" class="note-bold">① Mediator created and funded from the source account</text>
+    <text x="400" y="252" text-anchor="middle" class="note">one-shot CreateAccount funded with the base reserve required to operate (≈ 1.5 XLM)</text>
+  </g>
+
+  <!-- Activation rectangles -->
+  <rect x="195" y="290" width="10" height="50" fill="#4F46E5" opacity="0.85"/>
+  <rect x="595" y="320" width="10" height="180" fill="#F59E0B" opacity="0.85"/>
+  <rect x="995" y="500" width="10" height="40" fill="#0891B2" opacity="0.85"/>
+
+  <!-- 2. Message: S → M  AccountMerge -->
+  <line x1="208" y1="320" x2="592" y2="320" stroke="#4F46E5" stroke-width="2" marker-end="url(#arr-indigo)"/>
+  <text x="400" y="306" text-anchor="middle" class="msg indigo-text">② AccountMerge</text>
+  <text x="400" y="338" text-anchor="middle" class="msg-sub">transfers all remaining XLM (base reserve + recovered XLM) into the mediator</text>
+
+  <!-- 3. Note over Mediator -->
+  <g>
+    <rect x="440" y="370" width="320" height="60" rx="8" fill="#FEFCE8" stroke="#FDE047" stroke-width="1.4"/>
+    <text x="600" y="392" text-anchor="middle" class="note-bold">③ Mediator now holds the recovered funds</text>
+    <text x="600" y="412" text-anchor="middle" class="note">still no on-chain memo at this point</text>
+  </g>
+
+  <!-- 4. Message: M → D  Payment with memo -->
+  <line x1="608" y1="470" x2="992" y2="470" stroke="#0891B2" stroke-width="2" marker-end="url(#arr-stellar)"/>
+  <text x="800" y="456" text-anchor="middle" class="msg stellar-text">④ Payment</text>
+  <text x="800" y="488" text-anchor="middle" class="msg-sub op" fill="#0E7490">memo = required memo for the exchange</text>
+
+  <!-- 5. Note over Destination -->
+  <g>
+    <rect x="820" y="540" width="320" height="60" rx="8" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.4"/>
+    <text x="980" y="562" text-anchor="middle" class="note-bold stellar-text">⑤ Exchange credits the user</text>
+    <text x="980" y="582" text-anchor="middle" class="note">matched by deposit address + memo</text>
+  </g>
+
+  <!-- 6. Note over Mediator: cost disclosure -->
+  <g>
+    <rect x="440" y="640" width="320" height="80" rx="8" fill="#FFFBEB" stroke="#F59E0B" stroke-width="1.8"/>
+    <text x="600" y="664" text-anchor="middle" class="note-bold warn-text">⑥ Mediator retains 1 XLM base reserve</text>
+    <text x="600" y="684" text-anchor="middle" class="note">disclosed up front in the UI as the cost of using a mediator</text>
+    <text x="600" y="704" text-anchor="middle" class="note">the mediator account is then orphaned (no signers, no use)</text>
+  </g>
+
+  <!-- ============ FOOTER ============ -->
+  <text x="64" y="760" class="msg-sub"><tspan font-weight="700">Why this exists:</tspan> AccountMerge has no memo field. Sending directly to an exchange would deposit funds with no way to credit the user.</text>
+</svg>

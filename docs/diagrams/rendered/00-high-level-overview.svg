@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+      .h-title { font: 700 22px Inter, system-ui, sans-serif; fill: #0F172A; }
+      .h-sub   { font: 500 13px Inter, system-ui, sans-serif; fill: #64748B; }
+      .lbl     { font: 600 15px Inter, system-ui, sans-serif; fill: #0F172A; }
+      .lbl-sm  { font: 500 12px Inter, system-ui, sans-serif; fill: #475569; }
+      .lbl-xs  { font: 500 11px Inter, system-ui, sans-serif; fill: #64748B; }
+      .indigo-text { fill: #4338CA; }
+      .stellar-text { fill: #0E7490; }
+      .step-num { font: 700 11px Inter, system-ui, sans-serif; fill: #4F46E5; letter-spacing: 0.08em; }
+    </style>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#475569" />
+    </marker>
+    <marker id="arr-indigo" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#4F46E5" />
+    </marker>
+    <marker id="arr-stellar" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#0891B2" />
+    </marker>
+    <marker id="arr-slate" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#94A3B8" />
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="760" fill="#FFFFFF"/>
+
+  <!-- Title -->
+  <text x="64" y="56" class="h-title">LumenWipe — How it works</text>
+  <text x="64" y="80" class="h-sub">Non-custodial recovery of locked Stellar reserves. Keys never leave the browser.</text>
+
+  <!-- ============ TRUST BOUNDARY (Browser) ============ -->
+  <rect x="230" y="120" width="800" height="450" rx="20"
+        fill="#EEF2FF" stroke="#4F46E5" stroke-width="2" stroke-dasharray="8 6" opacity="0.95"/>
+  <!-- Browser header bar -->
+  <rect x="230" y="120" width="800" height="56" rx="20" fill="#4F46E5"/>
+  <rect x="230" y="148" width="800" height="28" fill="#4F46E5"/>
+  <!-- Window dots -->
+  <circle cx="258" cy="148" r="6" fill="#FCA5A5"/>
+  <circle cx="280" cy="148" r="6" fill="#FCD34D"/>
+  <circle cx="302" cy="148" r="6" fill="#86EFAC"/>
+  <text x="334" y="153" fill="#FFFFFF" font-weight="600" font-size="14">LumenWipe • runs in your browser • non-custodial</text>
+
+  <!-- Lock icon + caption (right edge of browser bar) -->
+  <g transform="translate(870,138)">
+    <rect x="0" y="6" width="18" height="14" rx="2" fill="#FFFFFF"/>
+    <path d="M3 6 v-3 a6 6 0 0 1 12 0 v3" fill="none" stroke="#FFFFFF" stroke-width="2"/>
+    <circle cx="9" cy="13" r="1.8" fill="#4F46E5"/>
+  </g>
+  <text x="894" y="153" font-size="11" font-weight="600" fill="#FFFFFF">keys stay here</text>
+
+  <!-- Subtitle inside browser -->
+  <text x="630" y="208" text-anchor="middle" class="lbl-sm">Four guided steps. The user reviews and signs every transaction.</text>
+
+  <!-- ============ 4 STEP CARDS ============ -->
+  <!-- Step 1: Analyze -->
+  <g>
+    <rect x="270" y="250" width="170" height="150" rx="12" fill="#FFFFFF" stroke="#4F46E5" stroke-width="1.8"/>
+    <text x="285" y="278" class="step-num">STEP 1</text>
+    <text x="355" y="320" text-anchor="middle" class="lbl indigo-text">Analyze</text>
+    <text x="355" y="343" text-anchor="middle" class="lbl-xs">the account</text>
+    <text x="355" y="380" text-anchor="middle" class="lbl-xs">subentries · DeFi</text>
+    <text x="355" y="395" text-anchor="middle" class="lbl-xs">positions · signers</text>
+  </g>
+
+  <!-- Step 2: Build plan -->
+  <g>
+    <rect x="460" y="250" width="170" height="150" rx="12" fill="#FFFFFF" stroke="#4F46E5" stroke-width="1.8"/>
+    <text x="475" y="278" class="step-num">STEP 2</text>
+    <text x="545" y="320" text-anchor="middle" class="lbl indigo-text">Build the</text>
+    <text x="545" y="343" text-anchor="middle" class="lbl indigo-text">wind-down plan</text>
+    <text x="545" y="380" text-anchor="middle" class="lbl-xs">ordered, deterministic</text>
+    <text x="545" y="395" text-anchor="middle" class="lbl-xs">unsigned XDRs</text>
+  </g>
+
+  <!-- Step 3: Review & sign -->
+  <g>
+    <rect x="650" y="250" width="170" height="150" rx="12" fill="#FFFFFF" stroke="#4F46E5" stroke-width="1.8"/>
+    <text x="665" y="278" class="step-num">STEP 3</text>
+    <text x="735" y="320" text-anchor="middle" class="lbl indigo-text">Review &amp;</text>
+    <text x="735" y="343" text-anchor="middle" class="lbl indigo-text">sign each step</text>
+    <text x="735" y="380" text-anchor="middle" class="lbl-xs">wallet or secret key</text>
+    <text x="735" y="395" text-anchor="middle" class="lbl-xs">in-memory only</text>
+  </g>
+
+  <!-- Step 4: Submit -->
+  <g>
+    <rect x="840" y="250" width="170" height="150" rx="12" fill="#FFFFFF" stroke="#4F46E5" stroke-width="1.8"/>
+    <text x="855" y="278" class="step-num">STEP 4</text>
+    <text x="925" y="320" text-anchor="middle" class="lbl indigo-text">Submit</text>
+    <text x="925" y="343" text-anchor="middle" class="lbl-xs">to Stellar</text>
+    <text x="925" y="380" text-anchor="middle" class="lbl-xs">poll until each step</text>
+    <text x="925" y="395" text-anchor="middle" class="lbl-xs">is confirmed</text>
+  </g>
+
+  <!-- Step arrows -->
+  <line x1="442" y1="325" x2="458" y2="325" stroke="#4F46E5" stroke-width="2" marker-end="url(#arr-indigo)"/>
+  <line x1="632" y1="325" x2="648" y2="325" stroke="#4F46E5" stroke-width="2" marker-end="url(#arr-indigo)"/>
+  <line x1="822" y1="325" x2="838" y2="325" stroke="#4F46E5" stroke-width="2" marker-end="url(#arr-indigo)"/>
+
+  <!-- Caption inside browser at bottom -->
+  <text x="630" y="540" text-anchor="middle" class="lbl-xs">No server-side signing · no custody · open source</text>
+
+  <!-- ============ USER ============ -->
+  <g>
+    <circle cx="125" cy="345" r="22" fill="#FFFFFF" stroke="#475569" stroke-width="1.8"/>
+    <circle cx="125" cy="338" r="8" fill="#475569"/>
+    <path d="M 108 360 a 17 17 0 0 1 34 0" fill="#475569"/>
+    <text x="125" y="400" text-anchor="middle" class="lbl">User</text>
+    <text x="125" y="420" text-anchor="middle" class="lbl-xs">holds the source account</text>
+  </g>
+
+  <!-- ============ STELLAR NETWORK ============ -->
+  <g>
+    <rect x="1080" y="290" width="170" height="120" rx="14" fill="#ECFEFF" stroke="#0891B2" stroke-width="2"/>
+    <!-- star symbol -->
+    <g transform="translate(1165,318)">
+      <polygon points="0,-12 3.5,-3.7 12,-3.7 5,2.5 7.5,11 0,5.5 -7.5,11 -5,2.5 -12,-3.7 -3.5,-3.7"
+               fill="#0891B2"/>
+    </g>
+    <text x="1165" y="356" text-anchor="middle" class="lbl stellar-text">Stellar network</text>
+    <text x="1165" y="376" text-anchor="middle" class="lbl-xs">classic + Soroban</text>
+    <text x="1165" y="394" text-anchor="middle" class="lbl-xs">immutable ledger</text>
+  </g>
+
+  <!-- ============ DATA SOURCES (read-only) ============ -->
+  <g>
+    <rect x="230" y="610" width="800" height="100" rx="14" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+    <text x="250" y="638" font-size="12" font-weight="700" fill="#475569" letter-spacing="0.05em">READ-ONLY DATA SOURCES</text>
+    <text x="250" y="666" class="lbl-sm">Stellar RPC  ·  stellar.expert indexer  ·  DeFi Position API (OctoPos / Orion)  ·  Soroswap routing</text>
+    <text x="250" y="688" class="lbl-xs">Used only to discover account state and plan steps. Never used to sign or submit transactions.</text>
+  </g>
+
+  <!-- ============ ARROWS ============ -->
+  <!-- user → browser -->
+  <line x1="160" y1="345" x2="220" y2="345" stroke="#475569" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="190" y="335" text-anchor="middle" class="lbl-xs">opens app</text>
+
+  <!-- data sources → analyze (dashed up) -->
+  <path d="M 355 610 L 355 405" fill="none" stroke="#94A3B8" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arr-slate)"/>
+  <text x="370" y="510" class="lbl-xs">account state +</text>
+  <text x="370" y="524" class="lbl-xs">DeFi positions</text>
+
+  <!-- submit → stellar -->
+  <line x1="1015" y1="325" x2="1075" y2="345" stroke="#4F46E5" stroke-width="2.5" marker-end="url(#arr-indigo)"/>
+  <text x="1045" y="305" text-anchor="middle" class="lbl-xs indigo-text" font-weight="600">user-signed XDR</text>
+
+  <!-- stellar → user (curved, around the bottom) -->
+  <path d="M 1080 410 C 1080 740, 125 740, 125 432"
+        fill="none" stroke="#0891B2" stroke-width="2.5"
+        stroke-linecap="round" marker-end="url(#arr-stellar)"/>
+  <rect x="525" y="722" width="230" height="22" rx="6" fill="#FFFFFF"/>
+  <text x="640" y="738" text-anchor="middle" class="lbl-xs stellar-text" font-weight="600">recovered XLM → destination address</text>
+
+  <!-- ============ LEGEND ============ -->
+  <g transform="translate(64,108)">
+    <rect x="0" y="-8" width="14" height="14" rx="3" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.5"/>
+    <text x="22" y="3" class="lbl-xs">Browser / non-custodial</text>
+    <rect x="0" y="12" width="14" height="14" rx="3" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+    <text x="22" y="23" class="lbl-xs">Read-only data source</text>
+    <rect x="0" y="32" width="14" height="14" rx="3" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.5"/>
+    <text x="22" y="43" class="lbl-xs">Stellar network</text>
+  </g>
+</svg>

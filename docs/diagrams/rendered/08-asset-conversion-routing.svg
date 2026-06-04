@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 1020" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+      .h-title { font: 700 22px Inter, system-ui, sans-serif; fill: #0F172A; }
+      .h-sub   { font: 500 13px Inter, system-ui, sans-serif; fill: #64748B; }
+      .lbl     { font: 600 14px Inter, system-ui, sans-serif; fill: #0F172A; }
+      .lbl-sm  { font: 500 12px Inter, system-ui, sans-serif; fill: #475569; }
+      .lbl-xs  { font: 500 11px Inter, system-ui, sans-serif; fill: #64748B; }
+      .indigo-text { fill: #4338CA; }
+      .stellar-text { fill: #0E7490; }
+      .slate-text { fill: #334155; }
+      .warn-text { fill: #B45309; }
+      .ok-text { fill: #047857; }
+      .op { font-family: 'JetBrains Mono', monospace; font-weight: 600; }
+    </style>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#475569"/></marker>
+    <marker id="arr-indigo" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#4F46E5"/></marker>
+    <marker id="arr-stellar" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#0891B2"/></marker>
+    <marker id="arr-warn" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#F59E0B"/></marker>
+  </defs>
+
+  <rect width="1300" height="1020" fill="#FFFFFF"/>
+
+  <text x="64" y="56" class="h-title">Asset conversion routing — classic and Soroban, with slippage protection</text>
+  <text x="64" y="80" class="h-sub">Quote a route, lock a minimum-received bound, then convert through the right primitive. No conversion ever proceeds without a slippage guard.</text>
+
+  <!-- asset -->
+  <g>
+    <rect x="540" y="120" width="240" height="70" rx="10" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+    <text x="660" y="148" text-anchor="middle" class="lbl slate-text">Non-XLM balance</text>
+    <text x="660" y="170" text-anchor="middle" class="lbl-xs">e.g. USDC, AQUA, SRT, …</text>
+  </g>
+
+  <!-- q (quote) -->
+  <g>
+    <rect x="540" y="220" width="240" height="80" rx="10" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.6"/>
+    <text x="660" y="248" text-anchor="middle" class="lbl indigo-text">Quote a route</text>
+    <text x="660" y="268" text-anchor="middle" class="lbl-xs">Soroswap aggregator (primary)</text>
+    <text x="660" y="284" text-anchor="middle" class="lbl-xs">SDEX paths (fallback)</text>
+  </g>
+
+  <!-- hasroute? -->
+  <g>
+    <polygon points="660,330 820,400 660,470 500,400" fill="#FFFFFF" stroke="#4F46E5" stroke-width="1.8"/>
+    <text x="660" y="394" text-anchor="middle" class="lbl indigo-text">Route found?</text>
+    <text x="660" y="414" text-anchor="middle" class="lbl-xs">over a configurable depth</text>
+  </g>
+
+  <!-- minrecv (yes branch, center) -->
+  <g>
+    <rect x="500" y="510" width="320" height="80" rx="10" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2"/>
+    <text x="660" y="540" text-anchor="middle" class="lbl indigo-text">Compute minimum received</text>
+    <text x="660" y="562" text-anchor="middle" class="lbl-xs op" fill="#4338CA">min = quote × (1 − slippageTolerance)</text>
+    <text x="660" y="580" text-anchor="middle" class="lbl-xs">user-visible · enforced on-chain</text>
+  </g>
+
+  <!-- kind? -->
+  <g>
+    <polygon points="660,620 820,690 660,760 500,690" fill="#FFFFFF" stroke="#4F46E5" stroke-width="1.8"/>
+    <text x="660" y="686" text-anchor="middle" class="lbl indigo-text">Token kind?</text>
+    <text x="660" y="706" text-anchor="middle" class="lbl-xs">classic asset or Soroban contract</text>
+  </g>
+
+  <!-- pp (left, classic) -->
+  <g>
+    <rect x="220" y="800" width="320" height="90" rx="10" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.8"/>
+    <text x="380" y="828" text-anchor="middle" class="lbl stellar-text">PathPaymentStrictSend</text>
+    <text x="380" y="850" text-anchor="middle" class="lbl-xs op" fill="#0E7490">dest_min = minimum received</text>
+    <text x="380" y="868" text-anchor="middle" class="lbl-xs">classic Stellar operation</text>
+    <text x="380" y="884" text-anchor="middle" class="lbl-xs">via SDEX / liquidity pools</text>
+  </g>
+
+  <!-- inv (right, Soroban) -->
+  <g>
+    <rect x="780" y="800" width="320" height="90" rx="10" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.8"/>
+    <text x="940" y="828" text-anchor="middle" class="lbl stellar-text">InvokeHostFunction · swap</text>
+    <text x="940" y="850" text-anchor="middle" class="lbl-xs op" fill="#0E7490">min_out = minimum received</text>
+    <text x="940" y="868" text-anchor="middle" class="lbl-xs">Soroban contract call</text>
+    <text x="940" y="884" text-anchor="middle" class="lbl-xs">on the routed pool</text>
+  </g>
+
+  <!-- conv (merge) -->
+  <g>
+    <rect x="540" y="920" width="240" height="60" rx="10" fill="#ECFDF5" stroke="#10B981" stroke-width="1.8"/>
+    <text x="660" y="950" text-anchor="middle" class="lbl ok-text">Converted to XLM</text>
+    <text x="660" y="968" text-anchor="middle" class="lbl-xs">balance is now zero in source asset</text>
+  </g>
+
+  <!-- opt (no route branch, right side) -->
+  <g>
+    <rect x="900" y="350" width="360" height="160" rx="10" fill="#FFFBEB" stroke="#F59E0B" stroke-width="1.8"/>
+    <text x="1080" y="378" text-anchor="middle" class="lbl warn-text">User choice required</text>
+    <text x="1080" y="402" text-anchor="middle" class="lbl-xs">no automated route exists at acceptable slippage</text>
+    <text x="920" y="430" class="lbl-xs warn-text" font-weight="700">option A</text>
+    <text x="990" y="430" class="lbl-xs">return asset to its issuer</text>
+    <text x="920" y="452" class="lbl-xs warn-text" font-weight="700">option B</text>
+    <text x="990" y="452" class="lbl-xs">forward balance to a third-party address</text>
+    <text x="1080" y="486" text-anchor="middle" class="lbl-xs">trustline removal still requires balance = 0</text>
+  </g>
+
+  <!-- rm (remove trustline, terminal at bottom) -->
+  <g>
+    <rect x="540" y="1020" width="240" height="0" rx="10" fill="none"/>
+  </g>
+  <!-- Adjusted: place "remove trustline" at bottom right area to fit -->
+  <g>
+    <rect x="900" y="920" width="280" height="60" rx="10" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.6"/>
+    <text x="1040" y="950" text-anchor="middle" class="lbl indigo-text">Remove trustline</text>
+    <text x="1040" y="968" text-anchor="middle" class="lbl-xs op" fill="#4338CA">ChangeTrust(limit = 0)</text>
+  </g>
+
+  <!-- ============ ARROWS ============ -->
+  <line x1="660" y1="190" x2="660" y2="218" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <line x1="660" y1="300" x2="660" y2="328" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+
+  <!-- hasroute yes (down) -->
+  <line x1="660" y1="470" x2="660" y2="508" stroke="#4F46E5" stroke-width="1.8" marker-end="url(#arr-indigo)"/>
+  <text x="676" y="492" class="lbl-xs indigo-text" font-weight="700">yes</text>
+
+  <!-- hasroute no (right to opt) -->
+  <path d="M 820 400 C 880 400, 900 410, 898 420" fill="none" stroke="#F59E0B" stroke-width="1.8" marker-end="url(#arr-warn)"/>
+  <text x="846" y="392" class="lbl-xs warn-text" font-weight="700">no</text>
+
+  <!-- minrecv → kind -->
+  <line x1="660" y1="590" x2="660" y2="618" stroke="#4F46E5" stroke-width="1.6" marker-end="url(#arr-indigo)"/>
+
+  <!-- kind classic (left) -->
+  <path d="M 500 690 C 420 690, 360 770, 380 798" fill="none" stroke="#0891B2" stroke-width="1.8" marker-end="url(#arr-stellar)"/>
+  <text x="440" y="740" class="lbl-xs stellar-text" font-weight="700">classic</text>
+
+  <!-- kind Soroban (right) -->
+  <path d="M 820 690 C 900 690, 940 770, 940 798" fill="none" stroke="#0891B2" stroke-width="1.8" marker-end="url(#arr-stellar)"/>
+  <text x="892" y="740" class="lbl-xs stellar-text" font-weight="700">Soroban</text>
+
+  <!-- pp → conv -->
+  <path d="M 540 870 C 600 880, 620 905, 600 918" fill="none" stroke="#10B981" stroke-width="1.8" marker-end="url(#arr-stellar)"/>
+  <!-- inv → conv -->
+  <path d="M 780 870 C 720 880, 700 905, 720 918" fill="none" stroke="#10B981" stroke-width="1.8" marker-end="url(#arr-stellar)"/>
+
+  <!-- conv → rm -->
+  <path d="M 780 950 C 850 950, 880 950, 898 950" fill="none" stroke="#4F46E5" stroke-width="1.8" marker-end="url(#arr-indigo)"/>
+
+  <!-- opt → rm (back if user chose route via issuer/third party, trustline still removable) -->
+  <path d="M 1080 510 C 1080 700, 1080 850, 1080 918" fill="none" stroke="#F59E0B" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr-warn)"/>
+  <text x="1090" y="720" class="lbl-xs warn-text">after user resolves balance</text>
+
+  <!-- Footer key idea -->
+  <g transform="translate(64,170)">
+    <rect x="0" y="-10" width="14" height="14" rx="3" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.5"/>
+    <text x="22" y="1" class="lbl-xs">client / planning step</text>
+    <rect x="0" y="14" width="14" height="14" rx="3" fill="#ECFEFF" stroke="#0891B2" stroke-width="1.5"/>
+    <text x="22" y="25" class="lbl-xs">on-chain operation</text>
+    <rect x="0" y="38" width="14" height="14" rx="3" fill="#FFFBEB" stroke="#F59E0B" stroke-width="1.5"/>
+    <text x="22" y="49" class="lbl-xs">user input required</text>
+  </g>
+</svg>

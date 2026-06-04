@@ -1,0 +1,99 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 620" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+      .h-title { font: 700 22px Inter, system-ui, sans-serif; fill: #0F172A; }
+      .h-sub   { font: 500 13px Inter, system-ui, sans-serif; fill: #64748B; }
+      .lbl     { font: 600 14px Inter, system-ui, sans-serif; fill: #0F172A; }
+      .lbl-sm  { font: 500 12px Inter, system-ui, sans-serif; fill: #475569; }
+      .lbl-xs  { font: 500 11px Inter, system-ui, sans-serif; fill: #64748B; }
+      .ok-text { fill: #047857; }
+      .warn-text { fill: #B45309; }
+      .slate-text { fill: #334155; }
+      .step-num { font: 700 11px Inter, system-ui, sans-serif; letter-spacing: 0.08em; }
+    </style>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#475569"/></marker>
+    <marker id="arr-ok" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#10B981"/></marker>
+    <marker id="arr-warn" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#F59E0B"/></marker>
+  </defs>
+
+  <rect width="1300" height="620" fill="#FFFFFF"/>
+
+  <text x="64" y="56" class="h-title">DeFi position adapter — dual provider with graceful degradation</text>
+  <text x="64" y="80" class="h-sub">OctoPos is primary. Orion is the live fallback. If both are unavailable we degrade safely to classic-only steps and warn the user.</text>
+
+  <!-- req -->
+  <g>
+    <rect x="60" y="290" width="200" height="80" rx="10" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1.5"/>
+    <text x="160" y="320" text-anchor="middle" class="lbl slate-text">Position request</text>
+    <text x="160" y="340" text-anchor="middle" class="lbl-xs">for address G...</text>
+  </g>
+
+  <!-- octo -->
+  <g>
+    <rect x="320" y="290" width="220" height="80" rx="10" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.8"/>
+    <text x="340" y="315" class="step-num" fill="#4338CA">PRIMARY</text>
+    <text x="430" y="338" text-anchor="middle" class="lbl" fill="#4338CA">Query OctoPos</text>
+    <text x="430" y="356" text-anchor="middle" class="lbl-xs">5s timeout · staleness check</text>
+  </g>
+
+  <!-- ok1 (top branch) -->
+  <g>
+    <rect x="600" y="110" width="280" height="80" rx="10" fill="#ECFDF5" stroke="#10B981" stroke-width="1.8"/>
+    <text x="740" y="142" text-anchor="middle" class="lbl ok-text">Return OctoPos data</text>
+    <text x="740" y="160" text-anchor="middle" class="lbl-xs ok-text">primary path · used in &gt;99% of cases</text>
+  </g>
+
+  <!-- orion -->
+  <g>
+    <rect x="600" y="290" width="220" height="80" rx="10" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.8"/>
+    <text x="620" y="315" class="step-num" fill="#4338CA">FALLBACK</text>
+    <text x="710" y="338" text-anchor="middle" class="lbl" fill="#4338CA">Query Orion</text>
+    <text x="710" y="356" text-anchor="middle" class="lbl-xs">5s timeout · same staleness rules</text>
+  </g>
+
+  <!-- ok2 -->
+  <g>
+    <rect x="880" y="110" width="280" height="80" rx="10" fill="#ECFDF5" stroke="#10B981" stroke-width="1.8"/>
+    <text x="1020" y="142" text-anchor="middle" class="lbl ok-text">Return Orion data</text>
+    <text x="1020" y="160" text-anchor="middle" class="lbl-xs ok-text">resilient under provider outage</text>
+  </g>
+
+  <!-- degraded -->
+  <g>
+    <rect x="880" y="430" width="360" height="140" rx="10" fill="#FFFBEB" stroke="#F59E0B" stroke-width="2"/>
+    <text x="900" y="455" class="step-num warn-text">DEGRADED MODE</text>
+    <text x="1060" y="478" text-anchor="middle" class="lbl warn-text">Classic-only wind-down</text>
+    <text x="1060" y="503" text-anchor="middle" class="lbl-xs">execute the plan without DeFi steps</text>
+    <text x="1060" y="523" text-anchor="middle" class="lbl-xs">warn user to verify DeFi positions</text>
+    <text x="1060" y="540" text-anchor="middle" class="lbl-xs">manually before merging</text>
+    <text x="1060" y="560" text-anchor="middle" class="lbl-xs warn-text" font-weight="700">never silently skip DeFi exposure</text>
+  </g>
+
+  <!-- ============ ARROWS ============ -->
+  <!-- req → octo -->
+  <line x1="260" y1="330" x2="318" y2="330" stroke="#475569" stroke-width="1.8" marker-end="url(#arr)"/>
+
+  <!-- octo → ok1 (up curve) -->
+  <path d="M 480 290 C 480 200, 580 200, 600 165" fill="none" stroke="#10B981" stroke-width="1.8" marker-end="url(#arr-ok)"/>
+  <text x="540" y="220" class="lbl-xs ok-text" font-weight="700">fresh</text>
+
+  <!-- octo → orion (right) -->
+  <line x1="540" y1="330" x2="598" y2="330" stroke="#475569" stroke-width="1.8" marker-end="url(#arr)"/>
+  <text x="569" y="320" text-anchor="middle" class="lbl-xs">stale or error</text>
+
+  <!-- orion → ok2 (up curve) -->
+  <path d="M 760 290 C 760 200, 860 200, 880 165" fill="none" stroke="#10B981" stroke-width="1.8" marker-end="url(#arr-ok)"/>
+  <text x="820" y="220" class="lbl-xs ok-text" font-weight="700">fresh</text>
+
+  <!-- orion → degraded (down-right curve) -->
+  <path d="M 760 370 C 760 420, 940 420, 1000 428" fill="none" stroke="#F59E0B" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#arr-warn)"/>
+  <text x="820" y="410" class="lbl-xs warn-text" font-weight="700">stale or error</text>
+
+  <!-- Footer note -->
+  <g transform="translate(60,520)">
+    <text x="0" y="0" class="lbl-sm slate-text" font-weight="700">Staleness rule</text>
+    <text x="0" y="20" class="lbl-xs">A response is treated as stale if its block-height lag exceeds a configured threshold</text>
+    <text x="0" y="36" class="lbl-xs">(typically a handful of ledgers). Stale → fall through, never trust silently.</text>
+  </g>
+</svg>

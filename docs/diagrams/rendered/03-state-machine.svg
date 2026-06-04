@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" font-family="Inter, system-ui, -apple-system, sans-serif">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+      .h-title { font: 700 22px Inter, system-ui, sans-serif; fill: #0F172A; }
+      .h-sub   { font: 500 13px Inter, system-ui, sans-serif; fill: #64748B; }
+      .lbl     { font: 600 14px Inter, system-ui, sans-serif; fill: #0F172A; }
+      .lbl-sm  { font: 500 11px Inter, system-ui, sans-serif; fill: #475569; }
+      .lbl-xs  { font: 500 10px Inter, system-ui, sans-serif; fill: #64748B; }
+      .indigo-text { fill: #4338CA; }
+      .danger-text { fill: #B91C1C; }
+      .ok-text { fill: #047857; }
+    </style>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#475569"/></marker>
+    <marker id="arr-ok" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#10B981"/></marker>
+    <marker id="arr-danger" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#DC2626"/></marker>
+    <marker id="arr-indigo" markerWidth="10" markerHeight="10" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#4F46E5"/></marker>
+  </defs>
+
+  <rect width="1280" height="760" fill="#FFFFFF"/>
+
+  <text x="64" y="56" class="h-title">Wind-down state machine</text>
+  <text x="64" y="80" class="h-sub">Resumable, recoverable. Every step is durable: failures can be retried, the user can cancel at any time, and the session can be resumed later.</text>
+
+  <!-- start dot -->
+  <circle cx="80" cy="138" r="8" fill="#0F172A"/>
+
+  <!-- Idle -->
+  <g>
+    <rect x="110" y="108" width="160" height="60" rx="30" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.8"/>
+    <text x="190" y="143" text-anchor="middle" class="lbl indigo-text">Idle</text>
+  </g>
+
+  <!-- Analyzing -->
+  <g>
+    <rect x="320" y="108" width="180" height="60" rx="30" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.8"/>
+    <text x="410" y="143" text-anchor="middle" class="lbl indigo-text">Analyzing</text>
+  </g>
+
+  <!-- PreflightComplete -->
+  <g>
+    <rect x="550" y="108" width="220" height="60" rx="30" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.8"/>
+    <text x="660" y="143" text-anchor="middle" class="lbl indigo-text">PreflightComplete</text>
+  </g>
+
+  <!-- SignerSetup (multisig branch) -->
+  <g>
+    <rect x="430" y="240" width="220" height="60" rx="30" fill="#FFF7ED" stroke="#F59E0B" stroke-width="1.8"/>
+    <text x="540" y="275" text-anchor="middle" class="lbl" fill="#B45309">SignerSetup</text>
+  </g>
+
+  <!-- StepExecuting (central) -->
+  <g>
+    <rect x="530" y="370" width="220" height="80" rx="14" fill="#EEF2FF" stroke="#4F46E5" stroke-width="2.4"/>
+    <text x="640" y="402" text-anchor="middle" class="lbl indigo-text">StepExecuting</text>
+    <text x="640" y="422" text-anchor="middle" class="lbl-xs">submit · poll · advance</text>
+    <text x="640" y="438" text-anchor="middle" class="lbl-xs">durable cursor in IndexedDB</text>
+  </g>
+
+  <!-- StepFailed (left of center) -->
+  <g>
+    <rect x="180" y="380" width="220" height="60" rx="30" fill="#FEF2F2" stroke="#DC2626" stroke-width="1.8"/>
+    <text x="290" y="415" text-anchor="middle" class="lbl danger-text">StepFailed</text>
+  </g>
+
+  <!-- StepConfirmed (right of center) -->
+  <g>
+    <rect x="880" y="380" width="220" height="60" rx="30" fill="#ECFDF5" stroke="#10B981" stroke-width="1.8"/>
+    <text x="990" y="415" text-anchor="middle" class="lbl ok-text">StepConfirmed</text>
+  </g>
+
+  <!-- Aborted (bottom-left terminal) -->
+  <g>
+    <rect x="180" y="580" width="220" height="60" rx="30" fill="#FEF2F2" stroke="#DC2626" stroke-width="2"/>
+    <text x="290" y="615" text-anchor="middle" class="lbl danger-text">Aborted</text>
+  </g>
+
+  <!-- Complete (bottom-right terminal) -->
+  <g>
+    <rect x="880" y="580" width="220" height="60" rx="30" fill="#ECFDF5" stroke="#10B981" stroke-width="2"/>
+    <text x="990" y="615" text-anchor="middle" class="lbl ok-text">Complete</text>
+  </g>
+
+  <!-- end dot -->
+  <circle cx="990" cy="700" r="8" fill="#0F172A"/>
+  <circle cx="990" cy="700" r="4" fill="#FFFFFF"/>
+
+  <!-- ============ ARROWS ============ -->
+  <!-- start → Idle -->
+  <line x1="88" y1="138" x2="108" y2="138" stroke="#475569" stroke-width="1.8" marker-end="url(#arr)"/>
+  <!-- Idle → Analyzing -->
+  <line x1="270" y1="138" x2="318" y2="138" stroke="#475569" stroke-width="1.8" marker-end="url(#arr)"/>
+  <text x="294" y="128" text-anchor="middle" class="lbl-xs">submit source + destination</text>
+  <!-- Analyzing → PreflightComplete -->
+  <line x1="500" y1="138" x2="548" y2="138" stroke="#475569" stroke-width="1.8" marker-end="url(#arr)"/>
+  <text x="524" y="128" text-anchor="middle" class="lbl-xs">analysis succeeds</text>
+
+  <!-- Analyzing → Aborted (down curve) -->
+  <path d="M 410 168 C 410 480, 290 480, 290 578"
+        fill="none" stroke="#DC2626" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arr-danger)"/>
+  <text x="365" y="320" class="lbl-xs danger-text">account not found</text>
+  <text x="365" y="334" class="lbl-xs danger-text">or blocked</text>
+
+  <!-- PreflightComplete → SignerSetup (down-left) -->
+  <path d="M 600 168 C 600 200, 540 210, 540 238" fill="none" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="455" y="200" class="lbl-xs">multisig detected</text>
+
+  <!-- PreflightComplete → StepExecuting (down direct) -->
+  <path d="M 720 168 C 720 260, 660 260, 660 368" fill="none" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="740" y="240" class="lbl-xs">single-signer</text>
+
+  <!-- SignerSetup → StepExecuting -->
+  <path d="M 580 300 C 580 330, 620 330, 620 368" fill="none" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)"/>
+  <text x="640" y="338" class="lbl-xs">enough signatures gathered</text>
+
+  <!-- StepExecuting ↔ StepFailed -->
+  <path d="M 530 400 L 402 405" stroke="#DC2626" stroke-width="1.6" marker-end="url(#arr-danger)" fill="none"/>
+  <text x="460" y="394" text-anchor="middle" class="lbl-xs danger-text">simulation or submit error</text>
+  <path d="M 400 420 L 528 425" stroke="#475569" stroke-width="1.6" marker-end="url(#arr)" fill="none"/>
+  <text x="464" y="445" text-anchor="middle" class="lbl-xs">retry same step</text>
+
+  <!-- StepExecuting ↔ StepConfirmed -->
+  <path d="M 750 400 L 878 405" stroke="#10B981" stroke-width="1.8" marker-end="url(#arr-ok)" fill="none"/>
+  <text x="814" y="394" text-anchor="middle" class="lbl-xs ok-text">ledger confirms step</text>
+  <path d="M 880 425 L 752 432" stroke="#4F46E5" stroke-width="1.6" marker-end="url(#arr-indigo)" fill="none"/>
+  <text x="816" y="455" text-anchor="middle" class="lbl-xs indigo-text">next step</text>
+
+  <!-- StepConfirmed → Complete -->
+  <line x1="990" y1="440" x2="990" y2="578" stroke="#10B981" stroke-width="2" marker-end="url(#arr-ok)"/>
+  <text x="1006" y="510" class="lbl-xs ok-text">merge confirmed</text>
+
+  <!-- StepFailed → Aborted -->
+  <line x1="290" y1="440" x2="290" y2="578" stroke="#DC2626" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#arr-danger)"/>
+  <text x="190" y="510" class="lbl-xs danger-text">user cancels</text>
+
+  <!-- StepExecuting → Aborted -->
+  <path d="M 540 450 C 540 540, 350 540, 322 580"
+        fill="none" stroke="#DC2626" stroke-width="1.4" stroke-dasharray="5 4" marker-end="url(#arr-danger)"/>
+  <text x="430" y="540" class="lbl-xs danger-text">user cancels</text>
+
+  <!-- Complete → end dot -->
+  <line x1="990" y1="640" x2="990" y2="692" stroke="#10B981" stroke-width="2" marker-end="url(#arr-ok)"/>
+
+  <!-- Legend -->
+  <g transform="translate(64,710)">
+    <rect x="0" y="-10" width="14" height="14" rx="3" fill="#EEF2FF" stroke="#4F46E5" stroke-width="1.5"/>
+    <text x="22" y="1" class="lbl-xs">in-flight / client state</text>
+    <rect x="180" y="-10" width="14" height="14" rx="3" fill="#FFF7ED" stroke="#F59E0B" stroke-width="1.5"/>
+    <text x="202" y="1" class="lbl-xs">awaiting input (multisig)</text>
+    <rect x="370" y="-10" width="14" height="14" rx="3" fill="#ECFDF5" stroke="#10B981" stroke-width="1.5"/>
+    <text x="392" y="1" class="lbl-xs">success path</text>
+    <rect x="500" y="-10" width="14" height="14" rx="3" fill="#FEF2F2" stroke="#DC2626" stroke-width="1.5"/>
+    <text x="522" y="1" class="lbl-xs">failure path</text>
+  </g>
+</svg>
