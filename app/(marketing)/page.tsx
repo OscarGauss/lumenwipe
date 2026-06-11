@@ -48,7 +48,7 @@ const STEPS = [
 ];
 
 const RESERVE = [
-  { label: "Base reserve", count: "account", xlm: 1.0, w: 20 },
+  { label: "Account minimum", count: "2 base reserves", xlm: 1.0, w: 20 },
   { label: "4 trustlines", count: "0.5 each", xlm: 2.0, w: 40 },
   { label: "2 open offers", count: "0.5 each", xlm: 1.0, w: 20 },
   { label: "1 data entry", count: "0.5 each", xlm: 0.5, w: 10 },
@@ -249,7 +249,7 @@ export default function LandingPage() {
               {
                 icon: Building2,
                 title: "Exchanges can't merge",
-                body: "No major exchange supports ACCOUNT_MERGE. Send your remaining XLM to a CEX deposit address and the 1 XLM base reserve stays frozen forever.",
+                body: "No major exchange supports ACCOUNT_MERGE. Send your remaining XLM to a CEX deposit address and the 1 XLM minimum balance stays frozen forever.",
               },
               {
                 icon: Layers,

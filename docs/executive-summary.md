@@ -8,7 +8,7 @@ LumenWipe is an open-source, non-custodial tool that cleanly closes a Stellar ac
 
 ## The problem
 
-Stellar has more than ten million accounts on mainnet, and a large share are stale, abandoned, or effectively locked. Every account holds XLM in reserve (1 XLM base, plus 0.5 XLM per trustline, offer, data entry, or signer), and that reserve is only recoverable by closing the account. Closing one cleanly is a manual, multi-step process most users cannot perform: a single leftover entry makes the final `ACCOUNT_MERGE` fail. Exchanges make it worse, because none support `ACCOUNT_MERGE`, so the base reserve stays frozen for anyone trying to cash out to a CEX. DeFi users have no tool at all today, since the existing demolisher has no Soroban support.
+Stellar has more than ten million accounts on mainnet, and a large share are stale, abandoned, or effectively locked. Every account holds XLM in reserve (a 1 XLM minimum balance, which is two base reserves, plus 0.5 XLM per trustline, offer, data entry, or signer), and that reserve is only recoverable by closing the account. Closing one cleanly is a manual, multi-step process most users cannot perform: a single leftover entry makes the final `ACCOUNT_MERGE` fail. Exchanges make it worse, because none support `ACCOUNT_MERGE`, so the base reserve stays frozen for anyone trying to cash out to a CEX. DeFi users have no tool at all today, since the existing demolisher has no Soroban support.
 
 ## What we build
 

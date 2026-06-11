@@ -8,5 +8,5 @@ flowchart TD
     hf -->|"yes"| withdraw["Withdraw / WithdrawCollateral<br/>(RequestType 1 / 3)"]
     hf -->|"no"| block["Block step, explain risk"]
     withdraw --> backstop{"Backstop deposit?"}
-    backstop -->|"queued (Q4W)"| wait["Show 17-day queue;<br/>proceed with rest, warn funds locked"]
+    backstop -->|"queued (Q4W)"| wait["Show queue (21d V1 / 17d V2);<br/>proceed with rest, warn funds locked"]
     backstop -->|"none"| done["Position closed"]
