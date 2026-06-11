@@ -13,9 +13,13 @@ const LINKS: NavLink[] = [
   { href: "/#security", label: "Security", section: "security" },
   { href: "/#faq", label: "FAQ", section: "faq" },
   { href: "/playground", label: "Playground" },
-  { href: "https://docs.lumenwipe.com", label: "Docs", external: true },
   { href: "/blog", label: "Blog" },
 ];
+
+const DOCS: NavLink = { href: "https://docs.lumenwipe.com", label: "Docs", external: true };
+
+// The mobile sheet lists everything, with the external link last.
+const MOBILE_LINKS: NavLink[] = [...LINKS, DOCS];
 
 // Landing sections the scroll-spy watches, in document order.
 const SPY_SECTIONS = ["security", "faq"];
@@ -124,6 +128,15 @@ export default function MarketingNav() {
 
         <div className="flex items-center gap-2">
           <a
+            href={DOCS.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group mr-2 hidden items-center gap-0.5 py-1 text-sm text-white/65 transition-colors hover:text-white lg:inline-flex"
+          >
+            {DOCS.label}
+            <ArrowUpRight className="h-3 w-3 opacity-40 transition-opacity group-hover:opacity-80" />
+          </a>
+          <a
             href={GITHUB}
             target="_blank"
             rel="noopener noreferrer"
@@ -152,7 +165,7 @@ export default function MarketingNav() {
       {open && (
         <div className="border-t border-white/10 bg-[#08080c]/95 backdrop-blur-xl lg:hidden">
           <div className="mx-auto flex max-w-6xl flex-col gap-1 px-5 py-4">
-            {LINKS.map((l) => {
+            {MOBILE_LINKS.map((l) => {
               const active = isActive(l);
               return (
                 <Link
