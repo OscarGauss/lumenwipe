@@ -81,7 +81,6 @@ const ECOSYSTEM = [
   "stellar.expert",
   "Soroswap API",
   "OctoPos",
-  "Orion",
 ];
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -344,8 +343,8 @@ export default function LandingPage() {
                   </h3>
                   <p className="mt-2 max-w-md text-sm leading-relaxed text-white/55">
                     The piece the original demolisher lacks. LumenWipe detects positions through
-                    OctoPos and Orion, then exits each one with its own protocol adapter, repaying
-                    loans, withdrawing liquidity, and unstaking before it removes the trustline.
+                    OctoPos, then exits each one with its own protocol adapter, repaying loans,
+                    withdrawing liquidity, and unstaking before it removes the trustline.
                   </p>
                 </div>
                 <span className="shrink-0 rounded-full border border-stellar/30 bg-stellar/10 px-2.5 py-1 mkt-mono text-[0.62rem] uppercase tracking-wider text-stellar/90">

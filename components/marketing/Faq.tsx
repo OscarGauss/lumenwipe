@@ -57,8 +57,8 @@ const ITEMS: Item[] = [
       <>
         This is where LumenWipe goes furthest. It detects and exits positions across{" "}
         <span className="text-white/80">Blend, Aquarius, Soroswap, Phoenix and FxDAO</span>, on top
-        of classic DEX offers and AMM pools, using OctoPos and Orion for position detection. The
-        full classic wind-down is live today; complete DeFi coverage is on the way.
+        of classic DEX offers and AMM pools, using OctoPos for position detection. The full classic
+        wind-down is live today; complete DeFi coverage is on the way.
       </>
     ),
   },
@@ -88,7 +88,9 @@ const ITEMS: Item[] = [
     a: (
       <>
         Both. Run the entire flow on testnet with no real funds at risk to see exactly what will
-        happen, then switch to mainnet for the real close.
+        happen, then switch to mainnet for the real close. Closing an account on mainnet is
+        irreversible and entirely at your own risk: review each step, the simulation result, and the
+        destination address before you sign anything.
       </>
     ),
   },
