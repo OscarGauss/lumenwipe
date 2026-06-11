@@ -12,7 +12,7 @@ Stellar has more than ten million accounts on mainnet, and a large share are sta
 
 ## What we build
 
-A guided web app that runs the whole wind-down in one flow and signs every transaction in the browser. The headline difference from the reference tool is closing positions across the main Soroban DeFi protocols (Blend, Aquarius, Soroswap, Phoenix, FxDAO) on top of all classic operations, plus a CEX-compatible merge, a read-only allowance inspector for revoking risky token approvals, and a UX designed for irreversible actions.
+A guided web app that runs the whole wind-down in one flow and signs every transaction in the browser. The headline difference from the reference tool is closing positions across the main Soroban DeFi protocols (Blend, Aquarius, Soroswap, Phoenix, FxDAO) on top of all classic operations, plus a CEX-compatible merge, a read-only allowance inspector for revoking risky token approvals, and a UX designed for irreversible actions. Two capabilities widen who can use it: sponsored fees close accounts that hold only their locked reserves and cannot pay their own transaction fees, and a REST API plus a TypeScript SDK let wallets and platforms run the same wind-down programmatically, from a single account to a fleet.
 
 ## Why us
 
@@ -25,25 +25,24 @@ Analyze the account, generate a deterministic ordered plan, execute it step by s
 ## Technical pillars
 
 - Non-custodial by construction. A user's private keys never leave the browser. The backend is read-only apart from one signing key, the shared exchange mediator, which can only co-sign a forwarding payment the user already authorized in an atomic transaction; no operator (including us) can move a user's account funds or close their account.
-- No bespoke indexer, no Horizon dependency. Stellar RPC reads live state, simulates, and submits; an existing indexer (stellar.expert) handles enumeration; OctoPos and Orion provide DeFi position detection.
+- No bespoke indexer, no Horizon dependency. Stellar RPC reads live state, simulates, and submits; an existing indexer (stellar.expert) handles enumeration; OctoPos provides DeFi position detection.
 - Per-protocol exit adapters and a versioned contract registry. Detect positions with the DeFi Position API, build the exit with each protocol's SDK, public API, or contract, and simulate before signing. A protocol upgrade is a registry update, not a rewrite.
 - CEX compatibility through a shared mediator account and an atomic forwarding payment, since exchanges do not support `ACCOUNT_MERGE`. The user recovers essentially all of their XLM.
-- Safety for irreversible operations. Per-step confirmation, simulation before signing, resumable sessions reconciled against on-chain state.
-- Security reviews as part of the development process, with external audits conducted when possible.
+- Safety for irreversible operations. Per-step confirmation, simulation before signing, resumable sessions reconciled against on-chain state, and a third-party security audit before any mainnet release.
 
 ## What it covers
 
 - The full account wind-down: sponsorship and multisig checks, signer and threshold normalization, trustline, data entry, offer, and DeFi position removal, claimable balances, asset conversion, and merge with the mediator flow.
-- Consumes a funded DeFi Position API recipient, OctoPos as primary and Orion as fallback.
-- Open source under Apache 2.0, self-hostable as a single service.
+- Consumes a funded DeFi Position API recipient, OctoPos, behind a pluggable adapter with an explicit degraded mode.
+- Open source under Apache 2.0, self-hostable as a single service, with a third-party security audit through the Audit Bank.
 
 ## Delivery
 
-| Tranche                 | Focus                                                                                                                                   |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Classic MVP          | Full classic wind-down on testnet, the mediator flow, multisig, session recovery. Largely built today.                                  |
-| 2. Soroban and DeFi     | Position detection via OctoPos and Orion; Blend, Aquarius, Soroswap, Phoenix, and FxDAO exits; Soroban conversion; allowance inspector. |
-| 3. Production hardening | Mainnet deployment, performance validation, final documentation.                                                                        |
+| Tranche                 | Focus                                                                                                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Classic MVP          | Full classic wind-down on testnet, the mediator flow, multisig, session recovery. Largely built today.                                                                    |
+| 2. Soroban and DeFi     | Position detection via OctoPos; Blend, Aquarius, Soroswap, Phoenix, and FxDAO exits; Soroban conversion; allowance inspector; sponsored fees for reserve-locked accounts. |
+| 3. Production hardening | Third-party security audit and remediation, mainnet deployment, performance validation, final documentation; public REST API and TypeScript SDK for integrators.          |
 
 ## Read more
 

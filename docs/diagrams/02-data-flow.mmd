@@ -1,6 +1,6 @@
 flowchart LR
     acct["Source account"] --> enum["Enumerate subentries<br/>(stellar.expert indexer)"]
-    acct --> defiq["Detect DeFi positions<br/>(OctoPos / Orion)"]
+    acct --> defiq["Detect DeFi positions<br/>(OctoPos)"]
     enum --> verify["Re-read each entry live<br/>(Stellar RPC getLedgerEntries)"]
     defiq --> verify
     verify --> plan["Build execution plan"]

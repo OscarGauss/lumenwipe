@@ -1,5 +1,5 @@
 flowchart TD
-    detect["Detect Blend position<br/>(OctoPos / Orion)"] --> ver["Resolve pool version<br/>(wasmHash: V1 or V2)"]
+    detect["Detect Blend position<br/>(OctoPos)"] --> ver["Resolve pool version<br/>(wasmHash: V1 or V2)"]
     ver --> hasdebt{"Open dToken debt?"}
     hasdebt -->|"yes"| acquire["Acquire repayment asset if needed<br/>(route + PathPayment / swap)"]
     acquire --> repay["Repay (RequestType 5)"]

@@ -50,7 +50,7 @@ LumenWipe is a guided, non-custodial tool that walks a user through closing a St
 
 "Closing" a Stellar account is not a single operation. An account can only be merged once it holds no subentries and sponsors no other account. Getting there means unwinding whatever the account accumulated over its life: trustlines, open DEX offers, data entries, extra signers, liquidity pool shares, and positions in DeFi protocols such as Blend, Aquarius, Soroswap, Phoenix, and FxDAO. Each of those steps is its own transaction, with its own ordering constraints and its own failure modes.
 
-The project extends the public-domain [stellar.expert/demolisher](https://stellar.expert/demolisher/public) tool built by Orbit Lens. That tool handles the classic case well: it cancels offers, sells assets on the SDEX, removes trustlines and data entries, works with multisig accounts, and can merge into exchange addresses through an intermediary account. It does not support Soroban, so any account with a Blend loan, an Aquarius LP position, or a Soroswap pair share cannot be closed with it today. This project keeps the parts that work, rebuilds them on the current Stellar stack, and adds full Soroban and DeFi parity, a read-only backend, an allowance inspector, and a production-grade UX designed for irreversible actions.
+The project extends the public-domain [stellar.expert/demolisher](https://stellar.expert/demolisher/public) tool built by Orbit Lens. That tool handles the classic case well: it cancels offers, sells assets on the SDEX, removes trustlines and data entries, works with multisig accounts, and can merge into exchange addresses through an intermediary account. It does not support Soroban, so any account with a Blend loan, an Aquarius LP position, or a Soroswap pair share cannot be closed with it today. This project keeps the parts that work, rebuilds them on the current Stellar stack, and adds full Soroban and DeFi parity, a read-only backend, an allowance inspector, and a production-grade UX designed for irreversible actions. Beyond the guided UI, two things widen who can use it: sponsored fees close accounts that hold only their locked reserves and cannot pay their own transaction fees (Section 8.1), and a REST API plus a TypeScript SDK let wallets and platforms drive the same wind-down programmatically (Section 7.3).
 
 The tool signs every transaction in the browser; your account's secret keys never reach a server. The backend is read-only except for a single signing key, the shared exchange mediator, which it uses solely to co-sign the forwarding payment to an exchange (see section 11). It holds no user funds and no user keys.
 
@@ -63,8 +63,8 @@ Core stack at a glance:
 | Wallets        | stellar-wallets-kit (SEP-43), plus an in-memory secret-key mode |
 | Network access | Stellar RPC: live reads, simulation, submission, events         |
 | Enumeration    | stellar.expert API (existing indexer), pluggable                |
-| Routing        | Soroswap API, with SDEX paths as fallback                       |
-| DeFi detection | OctoPos primary, Orion fallback                                 |
+| Routing        | Soroswap Aggregator API, with SDEX paths as fallback            |
+| DeFi detection | OctoPos DeFi Position API                                       |
 | Backend        | Read-only Next.js API routes, stateless, Redis cache            |
 
 ## 2. The problem
@@ -118,8 +118,8 @@ flowchart TB
     subgraph backend["Read-only backend: stateless, no custody, one mediator co-sign key"]
         direction TB
         analysis["Account analysis<br/>aggregator"]
-        defi["DeFi position adapter<br/>(OctoPos primary, Orion fallback)"]
-        route["Routing service<br/>(Soroswap API + SDEX paths)"]
+        defi["DeFi position adapter<br/>(OctoPos)"]
+        route["Routing service<br/>(Soroswap aggregator + SDEX paths)"]
         med["Mediator factory<br/>(builds unsigned XDR)"]
         reg["Exchange + contract<br/>registries"]
         cache["Cache (Redis)"]
@@ -129,8 +129,8 @@ flowchart TB
         direction TB
         rpc["Stellar RPC<br/>(live reads, simulate, submit, events)"]
         idx["Existing indexer<br/>(stellar.expert API)"]
-        soro["Soroswap API"]
-        pos["DeFi Position API<br/>(OctoPos / Orion)"]
+        soro["Soroswap Aggregator API"]
+        pos["DeFi Position API<br/>(OctoPos)"]
         net["Stellar ledger<br/>(classic + Soroban)"]
     end
 
@@ -157,7 +157,7 @@ flowchart TB
     pos --> net
 ```
 
-Two things to read off this diagram. The signed-XDR arrow runs from the client directly to Stellar RPC; submission is always client-side. The backend is not in the signing path for a user's account - its only signature is the shared mediator's co-signature on the exchange forwarding payment (section 11). And every external read source is pluggable: RPC, the indexer, the routing API, and the DeFi position API can each be swapped or pointed at a self-hosted instance without touching the transaction logic.
+Two things to read off this diagram. The signed-XDR arrow runs from the client directly to Stellar RPC; submission is always client-side. The backend is not in the signing path for a user's account — its only signature is the shared mediator's co-signature on the exchange forwarding payment (section 11). And every external read source is pluggable: RPC, the indexer, the routing API, and the DeFi position API can each be swapped or pointed at a self-hosted instance without touching the transaction logic.
 
 ## 5. Data sources, and why we run no indexer
 
@@ -169,24 +169,29 @@ Enumerating an account's subentries (every trustline, offer, data entry, claimab
 
 Instead the tool reads from existing, production-grade sources through pluggable adapters:
 
-| Concern                                                                                                         | Source                                                                                                                  | Why                                                                                                              |
-| --------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Enumerate subentries (trustlines, offers, data entries, claimable balances, pool shares, signers, sponsorships) | stellar.expert API (existing indexer; primary)                                                                          | RPC cannot enumerate. stellar.expert already indexes this and is the data layer behind the reference demolisher. |
-| Alternate enumeration for self-hosting                                                                          | Any Horizon-compatible provider (Blockdaemon, QuickNode, Validation Cloud, and similar), via the same adapter interface | Lets an operator who self-hosts avoid any single read dependency. Optional, not required.                        |
-| Live ledger-entry reads for known keys, right before building each transaction                                  | Stellar RPC `getLedgerEntries`                                                                                          | Authoritative current state. Builds exact transaction parameters and avoids acting on stale data.                |
-| Soroban simulation (footprint, authorization, resource fees)                                                    | Stellar RPC `simulateTransaction`                                                                                       | Required for every `InvokeHostFunction` operation.                                                               |
-| Transaction submission and confirmation                                                                         | Stellar RPC `sendTransaction`, `getTransaction`                                                                         | Client submits and polls directly.                                                                               |
-| Contract events (for example, discovering `approve` spenders for the allowance inspector)                       | Stellar RPC `getEvents`, with the indexer for older windows                                                             | RPC retains a bounded event window.                                                                              |
-| DeFi position detection across protocols                                                                        | OctoPos (primary) / Orion (fallback) DeFi Position API                                                                  | Builds on a funded DeFi Position API instead of reinventing protocol indexing.                                   |
-| Swap routing and swap-XDR construction                                                                          | Soroswap API (primary), stellar.expert paths (classic SDEX fallback)                                                    | Best-available routes across Soroban and classic venues without a Horizon dependency.                            |
-| Exchange and anchor registry (mediator and memo rules)                                                          | Static JSON sourced from the stellar.expert directory                                                                   | Determines which destinations need the mediator flow and a memo.                                                 |
+| Concern                                                                                   | Source                                                                                                                              | Why                                                                                                                                                                     |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Enumerate trustlines, pool shares, claimable balances, signers, sponsorships              | stellar.expert API (existing indexer; primary)                                                                                      | RPC cannot enumerate. stellar.expert already indexes this and is the data layer behind the reference demolisher.                                                        |
+| Enumerate open DEX offers and data entries                                                | A Horizon-compatible current-state endpoint (Blockdaemon, QuickNode, Validation Cloud, and similar), via the same adapter interface | stellar.expert exposes no offer or data-entry listing. These are current-state queries, unaffected by any provider's history truncation, and the provider is pluggable. |
+| Alternate enumeration for self-hosting                                                    | Any Horizon-compatible provider or Stellar-native indexer (Mercury, SubQuery, and similar)                                          | Lets an operator who self-hosts avoid any single read dependency.                                                                                                       |
+| Live ledger-entry reads for known keys, right before building each transaction            | Stellar RPC `getLedgerEntries`                                                                                                      | Authoritative current state. Builds exact transaction parameters and avoids acting on stale data.                                                                       |
+| Soroban simulation (footprint, authorization, resource fees)                              | Stellar RPC `simulateTransaction`                                                                                                   | Required for every `InvokeHostFunction` operation.                                                                                                                      |
+| Transaction submission and confirmation                                                   | Stellar RPC `sendTransaction`, `getTransaction`                                                                                     | Client submits and polls directly.                                                                                                                                      |
+| Contract events (for example, discovering `approve` spenders for the allowance inspector) | Stellar RPC `getEvents`, with the indexer for older windows                                                                         | RPC retains a bounded event window.                                                                                                                                     |
+| DeFi position detection across protocols                                                  | OctoPos DeFi Position API                                                                                                           | Builds on a funded DeFi Position API instead of reinventing protocol indexing.                                                                                          |
+| Swap routing and swap-XDR construction                                                    | Soroswap Aggregator API (primary), stellar.expert paths (classic SDEX fallback)                                                     | Best-available routes across Soroban and classic venues without a Horizon dependency.                                                                                   |
+| Exchange and anchor registry (mediator and memo rules)                                    | Static JSON sourced from the stellar.expert directory                                                                               | Determines which destinations need the mediator flow and a memo.                                                                                                        |
 
-The split is deliberate. An indexer answers "what does this account hold". RPC answers "what is the exact current state of this specific entry, right now, and will this transaction succeed". The tool enumerates with the indexer, then re-reads each entry over RPC immediately before building the transaction that touches it, so it never signs a transaction based on stale enumeration data.
+The split is deliberate. An indexer answers "what does this account hold". RPC answers "what is the exact current state of this specific entry, right now, and will this transaction succeed". The tool enumerates with the indexer, then re-reads each entry over RPC immediately before building the transaction that touches it, so it never signs a transaction based on stale enumeration data. As a completeness check, the enumeration result is reconciled against the account's `numSubEntries` counter from the live `AccountEntry`: if the counts disagree, the tool surfaces a blocker instead of building a plan that would miss an entry.
+
+### Accounts of any age
+
+Account age never limits this design, and that is worth stating precisely because Stellar RPC does have a retention window. The window (at most 7 days) applies only to history-shaped methods: `getTransactions`, `getTransaction`, and `getEvents`. It does not apply to `getLedgerEntries`, which reads the current ledger snapshot: a trustline created in 2015 and a trustline created yesterday are the same read. Closing an account needs no transaction history at all; it needs current state, which RPC serves for any account regardless of age, and enumeration, which the indexer serves from full history. The one age-correlated wrinkle is Soroban state archival: a long-dormant account's contract entries (a DeFi position, a token balance) may have expired to the archive, where a plain read no longer sees them. The tool detects archived entries and inserts a `RestoreFootprint` step before the exit that needs them (Section 22). Classic entries never archive.
 
 ```mermaid
 flowchart LR
     acct["Source account"] --> enum["Enumerate subentries<br/>(stellar.expert indexer)"]
-    acct --> defiq["Detect DeFi positions<br/>(OctoPos / Orion)"]
+    acct --> defiq["Detect DeFi positions<br/>(OctoPos)"]
     enum --> verify["Re-read each entry live<br/>(Stellar RPC getLedgerEntries)"]
     defiq --> verify
     verify --> plan["Build execution plan"]
@@ -260,17 +265,19 @@ It exposes a small read-only REST surface:
 | Endpoint                              | Purpose                                                                                                                                                    |
 | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `GET /v1/account/:address/analysis`   | Full pre-flight analysis: balances, subentries, sponsorships, multisig, reserves, detected DeFi positions, claimable balances, and computed merge blockers |
-| `GET /v1/account/:address/positions`  | Normalized DeFi positions, proxied and cached from OctoPos or Orion                                                                                        |
+| `GET /v1/account/:address/positions`  | Normalized DeFi positions, proxied and cached from OctoPos                                                                                                 |
 | `GET /v1/routing/convert`             | Best conversion route for an asset pair and amount, with estimated and minimum receive amounts                                                             |
 | `GET /v1/mediator/check/:destination` | Whether a destination needs the mediator flow and a memo, using the exchange registry and a ledger existence check                                         |
 | `POST /v1/mediator/prepare`           | An unsigned XDR that creates and funds the temporary mediator account from the user's account                                                              |
-| `GET /v1/health`                      | Component status for indexer, RPC, and the DeFi position providers                                                                                         |
+| `GET /v1/health`                      | Component status for indexer, RPC, and the DeFi position provider                                                                                          |
 
 ### 7.1 DeFi position adapter
 
-The backend normalizes either OctoPos or Orion behind one adapter interface, so the rest of the system never sees provider-specific shapes. OctoPos (Untangled Finance) and Orion (Daccred) are the two funded DeFi Position APIs in the Stellar ecosystem, and the backend builds on them. The adapter runs OctoPos as primary and falls back to Orion on error or stale data. If both are unavailable the tool enters a degraded mode: classic entries process normally, and the user is warned that DeFi positions could not be detected and must be checked manually.
+The backend consumes OctoPos behind one adapter interface, so the rest of the system never sees provider-specific shapes. OctoPos is a funded DeFi Position API in the Stellar ecosystem, and the backend builds on it rather than reinventing protocol indexing. The adapter keeps the provider pluggable: a self-hoster can point it at a compatible provider, and if OctoPos is unavailable the tool enters a degraded mode: classic entries process normally, and the user is warned that DeFi positions could not be detected and must be checked manually.
 
-Both providers return a similar shape: a position payload, an enrichment dictionary (asset symbols, decimals, USD prices and their source, contract names and versions), and a meta block with freshness and confidence fields. The adapter maps these onto one normalized model so the transaction builder sees a single contract:
+OctoPos covers position detection across Blend, Aquarius, Soroswap, Phoenix, and FxDAO, plus native wallet balances, and reports claimable AQUA rewards and pending Phoenix rewards alongside the positions. It also exposes two pieces the tool leans on directly: for unsubscribed addresses it returns `queryKeys` (ready-made ledger keys plus pool and pair metadata) so positions can be read straight over RPC `getLedgerEntries` without OctoPos storing anything server-side, which fits this tool's live re-read invariant exactly; and its Transaction Builder constructs Blend exit transactions (Section 9.3). One boundary matters for planning: OctoPos serves mainnet only. On testnet the tool discovers DeFi positions through direct contract reads driven by the contract registry, which is the same code path the degraded mode uses, so the fallback stays exercised by every test run.
+
+The provider returns a position payload, an enrichment dictionary (asset symbols, decimals, USD prices and their source, contract names and versions), and a meta block with freshness and confidence fields. The adapter maps these onto one normalized model so the transaction builder sees a single contract:
 
 | Normalized field                                           | Source                         | Use                                                                                   |
 | ---------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------- |
@@ -286,14 +293,24 @@ The adapter uses the authenticated tier where an API key is configured and the p
 flowchart TB
     req["Position request for address"] --> octo["Query OctoPos (5s timeout)"]
     octo -->|"fresh"| ok1["Return OctoPos data"]
-    octo -->|"stale or error"| orion["Query Orion (5s timeout)"]
-    orion -->|"fresh"| ok2["Return Orion data"]
-    orion -->|"stale or error"| degraded["Degraded mode:<br/>classic steps only,<br/>warn user to verify DeFi manually"]
+    octo -->|"stale"| retry["Refresh request"]
+    retry -->|"fresh"| ok1
+    octo -->|"error"| degraded["Degraded mode:<br/>classic steps only,<br/>warn user to verify DeFi manually"]
+    retry -->|"stale or error"| degraded
 ```
 
 ### 7.2 Caching
 
 Read data is cached with short TTLs, keyed by address: positions for tens of seconds, routing for a few seconds (routing is time sensitive), analysis for a few seconds with explicit refresh on user request. The cache holds public, read-only data. It holds no keys and no user identity.
+
+### 7.3 Integration surfaces: UI, API, and SDK
+
+The guided UI is one consumer of the system, not the system itself. Everything under it (analysis, plan generation, transaction construction) is exposed for programmatic use, because the audiences that close accounts at scale are not clicking through a wizard:
+
+- **REST API**: the read-only endpoints in Section 7 plus plan and unsigned-XDR generation per step, so a platform can drive a wind-down from its own backend, sign with its own keys, and submit. Batch analysis takes a list of addresses and returns per-account plans, which is what an operator decommissioning a fleet of deposit or payout accounts actually needs, with webhooks for step confirmation.
+- **TypeScript SDK**: the transaction builder is already a pure, self-contained module (account state in, unsigned envelopes out). Published as an npm package, it lets a wallet embed a "close account" flow inside its own UI and signer, with this web app serving as the reference implementation.
+
+The design cost of this is near zero precisely because of the existing constraints: the builder is pure, the backend is stateless, and signing was never coupled to the UI. The audiences are concrete: wallets offering account closure as a feature, platforms with per-user Stellar accounts (payouts, remittances, embedded wallets) recovering sponsored reserves when users churn, and exchanges or anchors giving customers a clean off-boarding path.
 
 ## 8. The execution plan
 
@@ -323,9 +340,22 @@ A few details that matter for correctness:
 
 Because a full wind-down is many sequential transactions, a single end-to-end dry run is not feasible. The tool's preview approach is two-tiered: a complete plan view up front (every step, its operations, its estimated fee, and the estimated final XLM that reaches the destination), and a per-step simulation immediately before each signature using `simulateTransaction` for Soroban steps and a build-and-validate check for classic steps. Any simulation failure is surfaced in plain language before the user is asked to sign, never after.
 
+### 8.1 Sponsored fees: closing accounts that cannot pay their own way
+
+The accounts that most need closing are often the ones that technically cannot start. An account sitting at exactly its minimum balance (1 XLM base reserve, or more XLM locked entirely in subentry reserves) cannot pay even the 100-stroop base fee: the network rejects the transaction with `txINSUFFICIENT_BALANCE` because the fee would take the account below its reserve. Without help, these accounts are stuck holding their own reserves hostage.
+
+The fix is the protocol's fee-bump transaction (CAP-15). The user builds and signs the inner transaction in the browser exactly as in every other step, with its inner fee set to zero. The backend wraps it in a fee-bump envelope whose fee source is a dedicated, lightly funded fee account, signs only the outer envelope, and submits. The semantics are exact: the fee account pays the entire fee, the inner source pays nothing, and the inner transaction's signature covers its contents, so the backend cannot alter an operation, an amount, or a destination without invalidating the user's signature. The fee account never touches user funds; the only thing it can spend is its own XLM, on fees.
+
+Because this adds a funded key to an otherwise read-only backend, the surface is deliberately narrow, mirroring the mediator co-sign validation:
+
+- The backend decodes the inner transaction and sponsors it only if every operation matches the wind-down shapes (`ChangeTrust` with limit 0, `ManageSellOffer`/`ManageBuyOffer` with amount 0, `ManageData` removals, `SetOptions` signer normalization, `ClaimClaimableBalance`, conversion payments, `AccountMerge` to the session destination).
+- The outer fee is capped per transaction, requests are rate-limited per account and IP, and the fee account carries a small operational float with a daily spend cap and alerting. Replay is structurally impossible: the inner transaction consumes the source account's sequence number.
+
+The reserves released by the wind-down repay the sponsorship many times over, so the feature funds itself at the account level. The infrastructure follows the ecosystem's current standard: SDF deprecated the Launchtube service in March 2026 and designates the OpenZeppelin Relayer as its successor, and the relayer's sponsored-transactions mode does exactly this fee-bump wrap for classic operations, so the deployment can self-host the audited relayer rather than hand-rolling the wrapper. Fee sponsorship covers transaction fees only; it is distinct from CAP-33 reserve sponsorship, which this flow does not need.
+
 ## 9. Closing positions: classic and Soroban DeFi
 
-This is the part the existing reference tool cannot do, and the core of the technical work. Detection and unwinding are separated. The DeFi Position API (OctoPos or Orion) tells the tool _what_ positions exist. The tool then constructs the _exit_ transactions itself, per protocol, reading exact on-chain state over RPC and simulating before signing. The tool integrates each protocol through its published SDK, public API, or contract interface; it does not guess at contract shapes.
+This is the part the existing reference tool cannot do, and the core of the technical work. Detection and unwinding are separated, and the tool builds no exit it can responsibly delegate. OctoPos tells the tool _what_ positions exist across every supported protocol, and for Blend it goes further: its Transaction Builder also constructs the exit transaction itself, which the tool verifies and signs in the browser (Section 9.3). For the remaining protocols (Aquarius, Soroswap, Phoenix, FxDAO) OctoPos provides detection plus the contract addresses and pool metadata, and the tool constructs the exits, reading exact on-chain state over RPC and simulating before signing. The tool integrates each protocol through its published SDK, public API, or contract interface; it does not guess at contract shapes.
 
 A versioned contract registry maps each pool or vault contract's `wasmHash` to a known protocol version. An unknown `wasmHash` flags that position for manual review rather than risking an exit transaction built against the wrong interface.
 
@@ -353,28 +383,30 @@ Stellar's native AMM (CAP-38, protocol 18 and later) holds a user's stake as a p
 
 ### 9.3 Blend (lending and borrowing)
 
-Blend positions are read with the official [`@blend-capital/blend-sdk`](https://www.npmjs.com/package/@blend-capital/blend-sdk). Supply positions are held as bTokens, debt as dTokens. The tool exits a pool through the `Pool.submit` entry point, which takes a list of typed requests, each a `{ request_type, address, amount }`. The relevant request types are `Repay` (5), `Withdraw` (1), and `WithdrawCollateral` (3). Passing an amount larger than the position is clamped down to the actual balance, which the tool uses to fully exit without dust.
+Blend positions are detected by OctoPos: supply held as bTokens, debt as dTokens, with per-position health factors. The primary exit path is the OctoPos Transaction Builder, which constructs the exit transaction as unsigned XDR. Its `UNWIND` action repays all debt via a flash loan, withdraws all collateral, and returns the remaining funds to the wallet in a single transaction, which removes the hardest part of a manual Blend exit: the tool no longer needs to acquire the repayment asset before it can repay. The returned XDR gets the same treatment as any server-built transaction (Section 9.9): the tool decodes it, asserts the invoked contract and amounts against its own position read, simulates it over RPC, shows the result, and only then asks the user to sign in the browser.
 
 ```mermaid
 flowchart TD
-    detect["Detect Blend position<br/>(OctoPos / Orion)"] --> ver["Resolve pool version<br/>(wasmHash: V1 or V2)"]
-    ver --> hasdebt{"Open dToken debt?"}
-    hasdebt -->|"yes"| acquire["Acquire repayment asset if needed<br/>(route + PathPayment / swap)"]
-    acquire --> repay["Repay (RequestType 5)"]
-    hasdebt -->|"no"| withdraw
-    repay --> hf{"Health factor stays >= 1.0?"}
-    hf -->|"yes"| withdraw["Withdraw / WithdrawCollateral<br/>(RequestType 1 / 3)"]
+    detect["Detect Blend position<br/>(OctoPos)"] --> ver["Resolve pool version<br/>(wasmHash: V1 or V2)"]
+    ver --> txb{"OctoPos Transaction<br/>Builder available?"}
+    txb -->|"yes"| unwind["UNWIND: flash-loan repay +<br/>withdraw all, one unsigned XDR"]
+    unwind --> verify["Decode + verify XDR client-side,<br/>simulate, review, sign"]
+    txb -->|"no"| manual["Build exit with blend-sdk:<br/>Repay (5), then Withdraw /<br/>WithdrawCollateral (1 / 3)"]
+    manual --> hf{"Health factor stays >= 1.0<br/>after each step?"}
+    hf -->|"yes"| verify
     hf -->|"no"| block["Block step, explain risk"]
-    withdraw --> backstop{"Backstop deposit?"}
+    verify --> backstop{"Backstop deposit?"}
     backstop -->|"queued (Q4W)"| wait["Show 17-day queue;<br/>proceed with rest, warn funds locked"]
     backstop -->|"none"| done["Position closed"]
 ```
 
-The order is enforced: repay all dToken debt first, then withdraw bToken supply, because the protocol rejects collateral withdrawal that would leave a position undercollateralized. When the account lacks the asset to repay, the tool routes and acquires it first (Section 10). Blend's backstop module uses a queue-for-withdrawal (Q4W) cooldown of 17 days; the backstop token is the BLND:USDC 80/20 Comet LP share. If a backstop withdrawal is queued, the tool shows the remaining time, proceeds with the rest of the wind-down, and warns that the backstop funds stay locked until the queue clears. Blend has V1 and V2 pools on mainnet, and the SDK ships both contract clients, so the tool resolves the pool version per position before building the exit.
+The fallback path builds the exit directly with the official [`@blend-capital/blend-sdk`](https://www.npmjs.com/package/@blend-capital/blend-sdk) through the `Pool.submit` entry point, which takes typed requests (`Repay` = 5, `Withdraw` = 1, `WithdrawCollateral` = 3; amounts above the position clamp down, so a full exit leaves no dust). There the order is enforced: repay all dToken debt first, then withdraw, because the protocol rejects collateral withdrawal that would leave a position undercollateralized, and when the account lacks the repayment asset the tool routes and acquires it first (Section 10).
+
+Two Blend details stay the tool's responsibility on either path. BLND emissions are not reported by OctoPos, so the tool reads unclaimed emissions through the Blend SDK and offers to claim them before the exit, which matters because users routinely forget accrued rewards. And Blend's backstop module uses a queue-for-withdrawal (Q4W) cooldown of 17 days (the backstop token is the BLND:USDC 80/20 Comet LP share): if a backstop withdrawal is queued, the tool shows the remaining time, proceeds with the rest of the wind-down, and warns that the backstop funds stay locked until the queue clears. Blend has V1 and V2 pools on mainnet, and the tool resolves the pool version per position before building or accepting any exit.
 
 ### 9.4 Aquarius (AMM)
 
-Aquarius is a Soroban AMM. LP positions are withdrawn by calling the pool's `withdraw(user, share_amount, min_amounts)`, which burns shares and returns the reserve assets, with a minimum-received tolerance to bound slippage. Unclaimed AQUA rewards are read with `get_user_reward(user)` and claimed with `claim(user)` before withdrawal when the user opts in; claiming AQUA may require an AQUA trustline, which the tool adds and then resolves in the conversion step. Pools and positions are discovered from the DeFi Position API and the Aquarius backend, with direct contract reads over RPC as the fallback.
+Aquarius is a Soroban AMM. LP positions are withdrawn by calling the pool's `withdraw(user, share_amount, min_amounts)`, which burns shares and returns the reserve assets, with a minimum-received tolerance to bound slippage. OctoPos reports claimable AQUA rewards alongside the LP position, the tool confirms the amount on-chain with `get_user_reward(user)`, and claims with `claim(user)` before withdrawal when the user opts in; claiming AQUA may require an AQUA trustline, which the tool adds and then resolves in the conversion step. Pools and positions are discovered from the DeFi Position API and the Aquarius backend, with direct contract reads over RPC as the fallback.
 
 ### 9.5 Soroswap
 
@@ -390,32 +422,42 @@ FxDAO is a CDP protocol: a user locks XLM collateral in a vault and mints a stab
 
 ### 9.8 What a protocol exit looks like end to end
 
-For every Soroban exit the shape is the same: detect the position from the DeFi Position API, resolve the contract version from the registry by `wasmHash`, read exact on-chain amounts over RPC `getLedgerEntries` with `ScVal` decoding, build the `InvokeHostFunction` operation, simulate it over RPC to fill in footprint, authorization, and resource fee, present the simulation result to the user, sign client-side, submit, and poll for confirmation. The same adapter pattern that isolates OctoPos from Orion isolates each protocol's contract interface, so a protocol upgrade is a registry and adapter change, not a rewrite.
+For every Soroban exit the shape is the same: detect the position from the DeFi Position API, resolve the contract version from the registry by `wasmHash`, read exact on-chain amounts over RPC `getLedgerEntries` with `ScVal` decoding, build the `InvokeHostFunction` operation, simulate it over RPC to fill in footprint, authorization, and resource fee, present the simulation result to the user, sign client-side, submit, and poll for confirmation. The same adapter pattern that keeps the position provider pluggable isolates each protocol's contract interface, so a protocol upgrade is a registry and adapter change, not a rewrite.
 
 ### 9.9 Exit adapter invariants
 
 Because the operations are irreversible, every protocol exit adapter must satisfy the same invariants before its output is signed. These are the contract the adapters are held to, and what the test suite checks.
 
-| Invariant                  | What it guarantees                                                                                                                                                      |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Live re-read before build  | Exit amounts come from a fresh `getLedgerEntries` read taken immediately before construction, never from cached or enumerated data                                      |
-| Simulate before sign       | Every Soroban exit is simulated over RPC for footprint, authorization, and resource fee, and the result is shown before the user signs                                  |
-| Halt on unknown `wasmHash` | An unrecognized contract version flags the position for manual review and builds nothing, rather than encoding against the wrong interface                              |
-| Clamp to balance           | Exit amounts are clamped to the actual position, so a full exit leaves no dust and never over-withdraws                                                                 |
-| Minimum-received bound     | Every swap or LP withdrawal carries a minimum-received amount derived from a fresh quote and a slippage tolerance                                                       |
-| Repay before withdraw      | Debt is repaid before collateral is withdrawn, and the resulting health factor is checked to stay at or above 1.0                                                       |
-| No silent skips            | A position the tool cannot safely close (undercollateralized vault, unknown version, missing route) is surfaced as a blocker with an explanation, never quietly ignored |
-| Deterministic plan         | The same account state produces the same ordered plan, which keeps the flow auditable and testable                                                                      |
+| Invariant                  | What it guarantees                                                                                                                                                                                                                                        |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Live re-read before build  | Exit amounts come from a fresh `getLedgerEntries` read taken immediately before construction, never from cached or enumerated data                                                                                                                        |
+| Simulate before sign       | Every Soroban exit is simulated over RPC for footprint, authorization, and resource fee, and the result is shown before the user signs                                                                                                                    |
+| Halt on unknown `wasmHash` | An unrecognized contract version flags the position for manual review and builds nothing, rather than encoding against the wrong interface                                                                                                                |
+| Clamp to balance           | Exit amounts are clamped to the actual position, so a full exit leaves no dust and never over-withdraws                                                                                                                                                   |
+| Verify server-built XDR    | A transaction built by an external API (OctoPos Transaction Builder, Soroswap API) is decoded client-side and its contract, function, amounts, minimum-received, and destination are asserted against locally read state before the user is asked to sign |
+| Minimum-received bound     | Every swap or LP withdrawal carries a minimum-received amount derived from a fresh quote and a slippage tolerance                                                                                                                                         |
+| Repay before withdraw      | Debt is repaid before collateral is withdrawn, and the resulting health factor is checked to stay at or above 1.0                                                                                                                                         |
+| No silent skips            | A position the tool cannot safely close (undercollateralized vault, unknown version, missing route) is surfaced as a blocker with an explanation, never quietly ignored                                                                                   |
+| Deterministic plan         | The same account state produces the same ordered plan, which keeps the flow auditable and testable                                                                                                                                                        |
 
 ## 10. Asset conversion and routing
 
-After positions are unwound, the account may hold several classic and Soroban tokens. The tool converts each to XLM (or a user-chosen base asset) using the best available route, then removes the now-empty trustlines.
+After positions are unwound, the account may hold several classic and Soroban tokens. Each non-XLM balance gets an explicit, per-asset disposition the user chooses in the plan view, because "convert everything" is the common case but not the only legitimate one:
 
-Routing has two engines. The primary is the Soroswap API, which finds optimal routes across Soroswap, Phoenix, Aquarius, and the classic SDEX, handles both classic and Soroban tokens, and builds the swap XDR. The fallback for pure-classic assets is strict-send path finding from the indexer, executed with `PathPaymentStrictSend` across SDEX order books and classic liquidity pools (up to six hops). Either way the tool computes a minimum-received amount from the quoted output and a slippage tolerance, and passes it as the destination minimum so a sudden price move cannot fill the swap at a bad rate.
+- **Convert to XLM** (the default): swap through the best available route, then remove the trustline.
+- **Transfer to the destination**: send the balance as-is. The tool checks on-chain that the destination holds a trustline for the asset (or accepts it via the Soroban token balance) before offering this option, so a transfer can never bounce.
+- **Burn**: send the balance back to its issuer, which destroys it. This is the right call for spam tokens, worthless dust, and assets with no route, and the tool labels it clearly as irreversible.
+
+Routing for the convert path has two engines. The primary is the Soroswap Aggregator API, which finds optimal routes across Soroswap, Phoenix, Aquarius, and the classic SDEX, handles both classic and Soroban tokens, and builds the swap XDR. Like every server-built transaction, that XDR is decoded and verified client-side before signing (Section 9.9). The fallback for pure-classic assets is strict-send path finding from the indexer, executed with `PathPaymentStrictSend` across SDEX order books and classic liquidity pools (up to six hops). Either way the tool computes a minimum-received amount from the quoted output and a slippage tolerance, and passes it as the destination minimum so a sudden price move cannot fill the swap at a bad rate.
 
 ```mermaid
 flowchart TD
-    asset["Non-XLM balance"] --> q["Quote route<br/>(Soroswap API; SDEX paths fallback)"]
+    asset["Non-XLM balance"] --> disp{"Per-asset disposition<br/>(user chooses)"}
+    disp -->|"transfer"| tl{"Destination holds<br/>trustline?"}
+    tl -->|"yes"| xfer["Payment to destination"]
+    tl -->|"no"| disp
+    disp -->|"burn"| burn["Payment to issuer<br/>(explicit irreversible confirm)"]
+    disp -->|"convert (default)"| q["Quote route<br/>(Soroswap aggregator; SDEX paths fallback)"]
     q --> hasroute{"Route found?"}
     hasroute -->|"yes"| minrecv["Compute minimum received<br/>(quote x (1 - slippage))"]
     minrecv --> kind{"Token kind"}
@@ -423,11 +465,13 @@ flowchart TD
     kind -->|"Soroban"| inv["InvokeHostFunction swap<br/>(min_out = minimum received)"]
     pp --> conv["Converted to XLM"]
     inv --> conv
-    hasroute -->|"no"| opt["Offer user a choice:<br/>return asset to issuer, or<br/>forward balance to a third-party address"]
+    hasroute -->|"no"| opt["Suggest transfer or burn<br/>instead of stranding the asset"]
     conv --> rm["Remove trustline (ChangeTrust limit 0)"]
+    xfer --> rm
+    burn --> rm
 ```
 
-The user keeps control. They can skip conversion for any asset and instead forward the balance to another wallet or exchange, and where no route exists the tool offers to return the asset to its issuer rather than stranding it. A trustline is only removed once its balance is zero; if a residual balance remains after conversion, the tool either returns it to the issuer or lets the user lower slippage and retry rather than silently failing the later merge.
+The user keeps control. A trustline is only removed once its balance is zero; if a residual balance remains after conversion, the tool offers the same transfer and burn dispositions or lets the user lower slippage and retry, rather than silently failing the later merge.
 
 ## 11. The mediator account flow for exchanges
 
@@ -443,7 +487,7 @@ sequenceDiagram
     S->>M: op1 AccountMerge (source into mediator)
     M->>D: op2 Payment (mediator to exchange, with memo)
     Note over D: Exchange credits the user by address + memo
-    Note over S,D: User signs op1; backend co-signs op2 - both apply or neither
+    Note over S,D: User signs op1; backend co-signs op2 — both apply or neither
 ```
 
 The mediator is a single, persistent account that the operator funds once. Its ~1 XLM base reserve is paid once and reused for every close, so the user recovers essentially all of their XLM, including the source account's freed base reserve; only standard network fees apply. This is the key difference from a throwaway per-user intermediary, which would sacrifice ~1 XLM on every close.
@@ -481,9 +525,9 @@ The wallet path is primary: through stellar-wallets-kit the private key never en
 
 Every destructive step requires an explicit acknowledgment that states what will happen, shows the affected entry or balance, and warns that it cannot be undone. The tool never auto-submits; the user triggers each submission. The merge gets its own full-screen confirmation with the destination shown in full, a ledger existence check, and memo validation for exchange destinations.
 
-### 13.4 Security reviews
+### 13.4 Audit
 
-The codebase undergoes internal security reviews as part of our development process. External security audits will be conducted when possible.
+Given the irreversibility, the project commits to a third-party security audit before any mainnet release, coordinated through Stellar's Audit Bank where possible. The audit scope is the key-handling surface, the CSP and XSS surface, the transaction construction logic (operation encoding, fee estimation, envelope handling), and the mediator flow. Critical and high findings are remediated before public mainnet launch; findings and their remediation status are published in the repository.
 
 ## 14. Trust minimization, decentralization, and self-hosting
 
@@ -493,7 +537,7 @@ Custody and control. The tool is non-custodial by construction. A user's account
 
 Who can run it. The whole project is open source under a permissive license, and the code that builds and signs transactions runs in the user's browser where anyone can read it. The tool deploys as a single Next.js service, so anyone can run their own instance with Docker or any Node host. Every external read source is behind a pluggable adapter, so a self-hoster can point the tool at their own Stellar RPC node, their preferred indexer, and their preferred DeFi Position API instance. The canonical deployment is a convenience, not a requirement: nothing about the tool depends on a server only the maintainers can run.
 
-Where centralization remains, and why. The remaining centralized pieces are all read-only data sources: RPC providers, the indexer, the routing API, and the DeFi Position API. None can affect custody. Each is pluggable and has multiple independent providers in the Stellar ecosystem, so no single one is a hard dependency. The DeFi Position API is a deliberate dependency, satisfied with two independent providers (OctoPos and Orion) behind automatic fallback, precisely so that no single provider is a point of failure.
+Where centralization remains, and why. The remaining centralized pieces are all read-only data sources: RPC providers, the indexer, the routing API, and the DeFi Position API. None can affect custody. Each is pluggable and has multiple independent providers in the Stellar ecosystem, so no single one is a hard dependency. The DeFi Position API (OctoPos) is a deliberate dependency, kept behind an adapter with an explicit degraded mode, so even there an outage limits functionality rather than breaking the tool.
 
 | Component                          | Ownership                            | Reach               | Notes                                                                                                                         |
 | ---------------------------------- | ------------------------------------ | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
@@ -502,8 +546,8 @@ Where centralization remains, and why. The remaining centralized pieces are all 
 | Contract and exchange registries   | Open source, community pull requests | Open                | Versioned JSON, updated by reviewed pull request                                                                              |
 | Stellar RPC access                 | Pluggable provider                   | External, read-only | Ecosystem providers or a self-hosted node                                                                                     |
 | Subentry enumeration               | Pluggable indexer                    | External, read-only | stellar.expert API or a Horizon-compatible provider                                                                           |
-| Swap routing                       | Pluggable                            | External, read-only | Soroswap API or SDEX paths                                                                                                    |
-| DeFi position detection            | Pluggable, dual-provider             | External, read-only | OctoPos primary, Orion fallback                                                                                               |
+| Swap routing                       | Pluggable                            | External, read-only | Soroswap Aggregator API or SDEX paths                                                                                         |
+| DeFi position detection            | Pluggable                            | External, read-only | OctoPos behind an adapter, with an explicit degraded mode                                                                     |
 
 Nothing in the open rows can move funds. Everything in the external rows is read-only and replaceable.
 
@@ -514,7 +558,7 @@ The tool runs on light, replaceable infrastructure, which follows from the non-c
 - Application: a single Next.js service that serves the guided UI and the read-only API routes. It holds no per-user state and no user keys (only the shared mediator co-sign key, injected from the environment), so it scales horizontally behind a load balancer. A published Docker image lets anyone self-host it.
 - Cache: a Redis instance holds short-lived public read data only.
 - Stellar access: Stellar RPC through ecosystem providers, configurable per deployment, with the option to run a self-hosted RPC node.
-- Data services: the stellar.expert API for enumeration and the Soroswap API for routing, both pluggable; the DeFi Position API (OctoPos primary, Orion fallback).
+- Data services: the stellar.expert API for enumeration and the Soroswap API for routing, both pluggable; the OctoPos DeFi Position API.
 
 The project commits to using the current stable Stellar stack: the latest `@stellar/stellar-sdk`, Stellar RPC, stellar-wallets-kit, and the live network protocol (Protocol 25, with Protocol 26 rolling out as of mid-2026). The contract registry and protocol adapters are versioned so the tool tracks protocol and DeFi upgrades without a rebuild of its core logic.
 
@@ -531,7 +575,7 @@ Privacy. The tool collects no personal information and requires no account. Secr
 Testing matters more than usual here because the operations are irreversible and touch real balances. The suite has four tiers, all run in CI, and automated tests never touch mainnet.
 
 - Unit: pure logic with deterministic fixtures. Transaction construction, fee estimation, reserve and balance math, routing parameter derivation, state machine transitions, input validation, and batching. The transaction builder is the highest-coverage module.
-- Integration: against Stellar testnet with accounts funded by Friendbot at the start of each run. Account analysis, signer removal, offer cancellation, trustline removal, asset conversion, the merge, and each DeFi protocol exit.
+- Integration: against Stellar testnet with accounts funded by Friendbot at the start of each run. Account analysis, signer removal, offer cancellation, trustline removal, asset conversion, the merge, and each DeFi protocol exit. DeFi detection in these tests runs through the direct contract-read path, since OctoPos serves mainnet only; that keeps the degraded-mode code under permanent test coverage.
 - Adversarial and edge case: deliberately unusual or hostile account states. Sponsoring accounts, the 1000-subentry maximum, revoked trustlines, multisig with hash(x) and pre-auth signers, undercollateralized vaults, queued backstop withdrawals, high-slippage conversions, and network failures such as a confirmed transaction whose response is lost (detected on retry through `getTransaction` so the step is not resubmitted).
 - End to end: Playwright drives a real browser against testnet through the full flow, including the multisig path, the mediator path for exchange destinations, session recovery, and the allowance inspector.
 
@@ -545,11 +589,11 @@ Protocols upgrade, and DeFi contracts get redeployed. The versioned contract reg
 
 The work is delivered in three cumulative tranches, each a working, independently verifiable artifact.
 
-| Tranche                 | Focus                                                                                                                                                                                                                                                                      | Key acceptance criteria                                                                                                                                                                                                                                      |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1. Classic MVP          | Full classic wind-down on testnet: signer normalization, data entries, offer cancellation, classic liquidity pool withdrawal, asset conversion via SDEX paths, trustline removal, merge, and the mediator flow. Wallet and secret-key signing, multisig, session recovery. | All classic steps execute correctly on testnet; multisig account closed with multiple keys; mediator flow works for exchange destinations; sessions resume from on-chain state; all errors render in plain language; transaction builder above 80% coverage. |
-| 2. Soroban and DeFi     | Full Soroban parity: DeFi position detection via OctoPos with Orion fallback; Blend, Aquarius, Soroswap, Phoenix, and FxDAO exits; Soroban token conversion; the allowance inspector; per-step simulation.                                                                 | Each protocol's positions detected, unwound, and confirmed on testnet; provider fallback within seconds; degraded mode when both providers are down; Soroban fee estimates within tolerance of submitted fees.                                               |
-| 3. Production hardening | Mainnet deployment; performance and load validation; final UX from user testing; complete public documentation.                                                                                                                                                            | Mainnet deployment live; CSP verified with no `unsafe-eval`; analysis within performance targets; repository public under a permissive license.                                                                                                              |
+| Tranche                 | Focus                                                                                                                                                                                                                                                                      | Key acceptance criteria                                                                                                                                                                                                                                                             |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Classic MVP          | Full classic wind-down on testnet: signer normalization, data entries, offer cancellation, classic liquidity pool withdrawal, asset conversion via SDEX paths, trustline removal, merge, and the mediator flow. Wallet and secret-key signing, multisig, session recovery. | All classic steps execute correctly on testnet; multisig account closed with multiple keys; mediator flow works for exchange destinations; sessions resume from on-chain state; all errors render in plain language; transaction builder above 80% coverage.                        |
+| 2. Soroban and DeFi     | Full Soroban parity: DeFi position detection via OctoPos; Blend, Aquarius, Soroswap, Phoenix, and FxDAO exits; Soroban token conversion; the allowance inspector; per-step simulation. Sponsored fees for reserve-locked accounts (Section 8.1).                           | Each protocol's positions detected, unwound, and confirmed on testnet; degraded mode when the position provider is down; Soroban fee estimates within tolerance of submitted fees; an account holding only its minimum reserve closed end to end on testnet.                        |
+| 3. Production hardening | Third-party security audit and remediation; mainnet deployment; performance and load validation; final UX from user testing; complete public documentation. Public REST API (batch analysis, per-step XDR, webhooks) and the TypeScript SDK package (Section 7.3).         | Audit complete with critical and high findings remediated and published; mainnet deployment live; CSP verified with no `unsafe-eval`; analysis within performance targets; API and SDK documented with a working integration example; repository public under a permissive license. |
 
 ## 20. Traction
 
@@ -562,7 +606,7 @@ Plain-English summary of what the tool is built from and why.
 - Frontend: Next.js and TypeScript, an open source and self-hostable web app, with TypeScript's type safety valuable when constructing transactions.
 - Stellar SDK: `@stellar/stellar-sdk`, the official SDK, which covers classic and Soroban.
 - Wallets: stellar-wallets-kit, for one interface across Freighter, xBull, Albedo, LOBSTR, Rabet, Hana, WalletConnect, and more, including Soroban authorization-entry signing.
-- Network access: Stellar RPC for live reads, simulation, submission, and events; the stellar.expert API for subentry enumeration; the Soroswap API for routing; OctoPos and Orion for DeFi position detection.
+- Network access: Stellar RPC for live reads, simulation, submission, and events; the stellar.expert API for subentry enumeration; the Soroswap Aggregator API for routing; OctoPos for DeFi position detection.
 - DeFi integration: the official Blend SDK, the Soroswap API, and the published contract interfaces for Aquarius, Phoenix, and FxDAO, behind per-protocol adapters and a versioned contract registry.
 - State and storage: Zustand for the wizard state machine, IndexedDB for resumable sessions (never keys).
 - Backend: read-only API routes within the same Next.js service, stateless, with a Redis cache for short-lived public read data.
@@ -600,15 +644,17 @@ The tool never leaves the user guessing. Every failure is either retryable with 
 
 These are the items the team is actively resolving. Listing them is deliberate: a tool that drains accounts should be honest about what is still being pinned down.
 
-| Area                    | Open question or risk                                                                                                                                                                             |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| FxDAO exit              | Confirm the exact collateral-withdrawal entrypoint and the linked-list neighbor-key handling for `pay_debt` against the current contracts, and the full set of supported stablecoin denominations |
-| Soroswap simulation     | Confirm the precise `simulateTransaction` edge case and the raw JSON-RPC submission pattern against the current Soroswap API and protocol version                                                 |
-| DeFi Position API specs | Pin the exact OctoPos and Orion fields the adapter maps (health factor, staleness, attribution confidence) and coordinate with both teams                                                         |
-| Multisig signer types   | hash(x) and pre-auth transaction signers cannot be signed automatically; define the manual pre-image and pre-auth paths                                                                           |
-| Dry-run depth           | A full end-to-end simulation across many sequential transactions is not feasible; user testing must confirm that per-step simulation plus the plan view is enough                                 |
-| Soroban state archival  | Archived ledger entries on dormant accounts may need a `RestoreFootprint` operation before an exit; confirm the handling end to end                                                               |
-| Coverage drift          | Protocols change market share and contract versions; the registry and adapters track this, and coverage priorities are reviewed against on-chain activity                                         |
+| Area                             | Open question or risk                                                                                                                                                                                                                                                          |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| FxDAO exit                       | Confirm the exact collateral-withdrawal entrypoint and the linked-list neighbor-key handling for `pay_debt` against the current contracts, and the full set of supported stablecoin denominations                                                                              |
+| Soroswap simulation              | Confirm the precise `simulateTransaction` edge case and the raw JSON-RPC submission pattern against the current Soroswap API and protocol version                                                                                                                              |
+| DeFi Position API specs          | Pin the exact OctoPos fields the adapter maps and coordinate with the OctoPos team; the documented API host and the live deployment currently diverge (endpoint paths and response surface), so the adapter pins against the live contract and treats the docs as aspirational |
+| OctoPos Transaction Builder      | Confirm Transaction Builder availability and auth on the live OctoPos deployment for Blend exits; the fallback (client-built exits via the Blend SDK) is specified either way                                                                                                  |
+| Offer and data-entry enumeration | stellar.expert exposes no listing for open offers or data entries; select and pin the Horizon-compatible current-state provider for those two queries, with `numSubEntries` reconciliation as the completeness check                                                           |
+| Multisig signer types            | hash(x) and pre-auth transaction signers cannot be signed automatically; define the manual pre-image and pre-auth paths                                                                                                                                                        |
+| Dry-run depth                    | A full end-to-end simulation across many sequential transactions is not feasible; user testing must confirm that per-step simulation plus the plan view is enough                                                                                                              |
+| Soroban state archival           | Archived ledger entries on dormant accounts may need a `RestoreFootprint` operation before an exit; confirm the handling end to end                                                                                                                                            |
+| Coverage drift                   | Protocols change market share and contract versions; the registry and adapters track this, and coverage priorities are reviewed against on-chain activity                                                                                                                      |
 
 ## 24. Glossary
 
@@ -630,7 +676,6 @@ These are the items the team is actively resolving. Listing them is deliberate: 
 
 ## 25. References
 
-- SCF Handbook, Build Award track: https://stellar.gitbook.io/scf-handbook/scf-awards/build-award/rfp-track
 - Reference tool, stellar.expert demolisher (Orbit Lens): https://stellar.expert/demolisher/public
 - StellarExpert demolisher announcement: https://medium.com/@orbit.lens/stellarexpert-embeddable-blocks-accounts-demolisher-and-other-new-features-931ec41427a1
 - Stellar RPC overview and methods: https://developers.stellar.org/docs/data/apis/rpc
@@ -649,5 +694,4 @@ These are the items the team is actively resolving. Listing them is deliberate: 
 - stellar-wallets-kit: https://github.com/Creit-Tech/Stellar-Wallets-Kit
 - Stellar Asset Contract: https://developers.stellar.org/docs/tokens/stellar-asset-contract
 - SEP-41 token interface: https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0041.md
-- OctoPos (Untangled Finance): https://communityfund.stellar.org/project/octopos-defi-position-api-g6i
-- Orion (Daccred) submission: https://communityfund.stellar.org/dashboard/submissions/recPt6cTMzx8XmiNj
+- OctoPos: https://communityfund.stellar.org/project/octopos-defi-position-api-g6i and https://docs.crediolabs.ai/docs/category/octopos
