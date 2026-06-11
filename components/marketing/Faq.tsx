@@ -32,10 +32,11 @@ const ITEMS: Item[] = [
     q: "How much XLM will I actually get back?",
     a: (
       <>
-        Everything recoverable. Stellar locks <span className="text-value">1 XLM</span> as a base
-        reserve plus <span className="text-value">0.5 XLM</span> for each subentry: every trustline,
-        open offer, data entry, and extra signer. LumenWipe unwinds all of them to release those
-        reserves, converts leftover tokens to XLM, and sweeps the full balance to your destination.
+        Everything recoverable. Stellar requires a <span className="text-value">1 XLM</span> minimum
+        balance (two base reserves) plus <span className="text-value">0.5 XLM</span> for each
+        subentry: every trustline, open offer, data entry, and extra signer. LumenWipe unwinds all
+        of them to release those reserves, converts leftover tokens to XLM, and sweeps the full
+        balance to your destination.
       </>
     ),
   },
@@ -45,9 +46,10 @@ const ITEMS: Item[] = [
       <>
         Yes. Exchanges don&apos;t support{" "}
         <span className="mkt-mono text-white/80">ACCOUNT_MERGE</span>, so LumenWipe routes the final
-        merge through a transparent, single-use mediator account and pays out to your deposit
-        address with the correct memo. Known exchanges are validated against a registry that
-        enforces the required memo type, so deposits don&apos;t go missing.
+        merge through a shared mediator account in one atomic transaction and pays out to your
+        deposit address with the correct memo, so you recover essentially all of your XLM. Known
+        exchanges are validated against a registry that enforces the required memo type, so deposits
+        don&apos;t go missing.
       </>
     ),
   },
@@ -57,8 +59,8 @@ const ITEMS: Item[] = [
       <>
         This is where LumenWipe goes furthest. It detects and exits positions across{" "}
         <span className="text-white/80">Blend, Aquarius, Soroswap, Phoenix and FxDAO</span>, on top
-        of classic DEX offers and AMM pools, using OctoPos and Orion for position detection. The
-        full classic wind-down is live today; complete DeFi coverage is on the way.
+        of classic DEX offers and AMM pools, using OctoPos for position detection. The full classic
+        wind-down is live today; complete DeFi coverage is on the way.
       </>
     ),
   },
@@ -88,7 +90,9 @@ const ITEMS: Item[] = [
     a: (
       <>
         Both. Run the entire flow on testnet with no real funds at risk to see exactly what will
-        happen, then switch to mainnet for the real close.
+        happen, then switch to mainnet for the real close. Closing an account on mainnet is
+        irreversible and entirely at your own risk: review each step, the simulation result, and the
+        destination address before you sign anything.
       </>
     ),
   },

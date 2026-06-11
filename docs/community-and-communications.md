@@ -45,7 +45,7 @@ The reasoning behind the decentralized channels is consistency with the project'
 
 Closing positions correctly depends on each DeFi protocol's contract interfaces, which change. The project coordinates with the relevant teams during development and after launch:
 
-- The DeFi Position API providers, OctoPos (Untangled Finance) and Orion (Daccred), since the backend consumes one of them and the tool relies on accurate position detection.
+- The DeFi Position API provider, OctoPos, since the backend consumes it and the tool relies on accurate position detection.
 - The DeFi protocol teams whose positions the tool unwinds: Blend, Aquarius, Soroswap, Phoenix, and FxDAO, to track contract upgrades and confirm exit interfaces.
 - Orbit Lens and the stellar.expert team, whose demolisher this project extends and whose API the tool reads for enumeration.
 - The stellar-wallets-kit maintainers, for wallet integration and Soroban authorization-entry signing.

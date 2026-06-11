@@ -48,7 +48,7 @@ const STEPS = [
 ];
 
 const RESERVE = [
-  { label: "Base reserve", count: "account", xlm: 1.0, w: 20 },
+  { label: "Account minimum", count: "2 base reserves", xlm: 1.0, w: 20 },
   { label: "4 trustlines", count: "0.5 each", xlm: 2.0, w: 40 },
   { label: "2 open offers", count: "0.5 each", xlm: 1.0, w: 20 },
   { label: "1 data entry", count: "0.5 each", xlm: 0.5, w: 10 },
@@ -81,7 +81,6 @@ const ECOSYSTEM = [
   "stellar.expert",
   "Soroswap API",
   "OctoPos",
-  "Orion",
 ];
 
 function Eyebrow({ children }: { children: React.ReactNode }) {
@@ -250,7 +249,7 @@ export default function LandingPage() {
               {
                 icon: Building2,
                 title: "Exchanges can't merge",
-                body: "No major exchange supports ACCOUNT_MERGE. Send your remaining XLM to a CEX deposit address and the 1 XLM base reserve stays frozen forever.",
+                body: "No major exchange supports ACCOUNT_MERGE. Send your remaining XLM to a CEX deposit address and the 1 XLM minimum balance stays frozen forever.",
               },
               {
                 icon: Layers,
@@ -344,8 +343,8 @@ export default function LandingPage() {
                   </h3>
                   <p className="mt-2 max-w-md text-sm leading-relaxed text-white/55">
                     The piece the original demolisher lacks. LumenWipe detects positions through
-                    OctoPos and Orion, then exits each one with its own protocol adapter, repaying
-                    loans, withdrawing liquidity, and unstaking before it removes the trustline.
+                    OctoPos, then exits each one with its own protocol adapter, repaying loans,
+                    withdrawing liquidity, and unstaking before it removes the trustline.
                   </p>
                 </div>
                 <span className="shrink-0 rounded-full border border-stellar/30 bg-stellar/10 px-2.5 py-1 mkt-mono text-[0.62rem] uppercase tracking-wider text-stellar/90">

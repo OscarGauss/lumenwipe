@@ -50,7 +50,7 @@ const STEPS = [
   {
     icon: Search,
     title: "Analyze the account",
-    body: "Enumerate every subentry (trustlines, offers, data entries, signers) and detect DeFi positions through OctoPos with Orion as fallback. The result is a single, ordered execution plan.",
+    body: "Enumerate every subentry (trustlines, offers, data entries, signers) and detect DeFi positions through OctoPos. The result is a single, ordered execution plan.",
     op: "stellar.expert + Stellar RPC",
   },
   {
