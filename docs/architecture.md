@@ -73,7 +73,7 @@ Stellar has more than ten million accounts on mainnet, and a large share of them
 
 First, every account locks XLM in reserve. The base reserve is 0.5 XLM. An account must hold a minimum balance of two base reserves (1 XLM) plus one base reserve (0.5 XLM) for each subentry it owns: each trustline, offer, data entry, and extra signer. A pool-share trustline counts as two base reserves. So an account with four trustlines, two offers, one data entry, and one extra signer locks `(2 + 8) * 0.5 = 5 XLM` that the user cannot spend until the entries are removed. Across millions of accounts, this is a meaningful amount of capital frozen in the ledger.
 
-Second, closing an account cleanly is a manual, multi-step process that most users cannot perform. Any leftover entry causes the final `ACCOUNT_MERGE` to fail with `ACCOUNT_MERGE_HAS_SUB_ENTRIES`. A user has to know to cancel every offer, exit every DeFi position, sell every asset, remove every trustline, clear every data entry, and drop every extra signer, in a valid order, before the merge will succeed. Miss one and the merge reverts.
+Second, closing an account cleanly is a manual, multi-step process that most users cannot perform. Any leftover entry causes the final `ACCOUNT_MERGE` to fail with `ACCOUNT_MERGE_HAS_SUB_ENTRIES`. A user has to know to cancel every offer, exit every DeFi position, sell every asset, remove every trustline, and clear every data entry, in a valid order, before the merge will succeed. Miss one and the merge reverts. (Extra signers are the one kind of subentry that does not block the merge: the protocol's check excludes them, and they are deleted with the account.)
 
 Centralized exchanges make it worse. No major exchange supports `ACCOUNT_MERGE`. A user who wants to send their remaining XLM to an exchange cannot merge directly into a deposit address, so the final 1 XLM base reserve stays frozen on the ledger. The reference demolisher solves this with an intermediary account, and this project keeps that approach.
 
@@ -85,15 +85,15 @@ Three groups of users feel this most: individuals consolidating or abandoning wa
 
 The merge fails with one of these result codes if a precondition is unmet:
 
-| Result code                     | Cause                                                               | How the tool resolves it                                                               |
-| ------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `ACCOUNT_MERGE_HAS_SUB_ENTRIES` | Source still has trustlines, offers, data entries, or extra signers | Remove every subentry in earlier steps before the merge                                |
-| `ACCOUNT_MERGE_IS_SPONSOR`      | Source sponsors reserves for another account                        | Detect in pre-flight, block the merge, explain that sponsorships must be revoked first |
-| `ACCOUNT_MERGE_IMMUTABLE_SET`   | Source has the `AUTH_IMMUTABLE` flag set                            | Detect in pre-flight, block with a clear explanation (the account cannot be merged)    |
-| `ACCOUNT_MERGE_SEQNUM_TOO_FAR`  | Source sequence number is above the current ledger bound            | Surface the condition; rarely hit in practice                                          |
-| `ACCOUNT_MERGE_NO_ACCOUNT`      | Destination does not exist                                          | Verify the destination on the ledger before submitting                                 |
-| `ACCOUNT_MERGE_DEST_FULL`       | Destination would exceed the maximum XLM an account can hold        | Surface as a blocker                                                                   |
-| `ACCOUNT_MERGE_MALFORMED`       | Source equals destination, or otherwise malformed                   | Validation rejects this at input time                                                  |
+| Result code                     | Cause                                                                                                       | How the tool resolves it                                                               |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `ACCOUNT_MERGE_HAS_SUB_ENTRIES` | Source still has trustlines, offers, or data entries (signers are excluded from this check by the protocol) | Remove every blocking subentry in earlier steps before the merge                       |
+| `ACCOUNT_MERGE_IS_SPONSOR`      | Source sponsors reserves for another account                                                                | Detect in pre-flight, block the merge, explain that sponsorships must be revoked first |
+| `ACCOUNT_MERGE_IMMUTABLE_SET`   | Source has the `AUTH_IMMUTABLE` flag set                                                                    | Detect in pre-flight, block with a clear explanation (the account cannot be merged)    |
+| `ACCOUNT_MERGE_SEQNUM_TOO_FAR`  | Source sequence number is above the current ledger bound                                                    | Surface the condition; rarely hit in practice                                          |
+| `ACCOUNT_MERGE_NO_ACCOUNT`      | Destination does not exist                                                                                  | Verify the destination on the ledger before submitting                                 |
+| `ACCOUNT_MERGE_DEST_FULL`       | Destination would exceed the maximum XLM an account can hold                                                | Surface as a blocker                                                                   |
+| `ACCOUNT_MERGE_MALFORMED`       | Source equals destination, or otherwise malformed                                                           | Validation rejects this at input time                                                  |
 
 The pre-flight checks map directly onto these codes. Sponsorship detection prevents `ACCOUNT_MERGE_IS_SPONSOR`. Subentry enumeration and removal prevent `ACCOUNT_MERGE_HAS_SUB_ENTRIES`. Destination verification prevents `ACCOUNT_MERGE_NO_ACCOUNT`. The tool never submits a merge it expects to fail.
 
@@ -332,7 +332,7 @@ flowchart TD
 
 A few details that matter for correctness:
 
-- Signer normalization runs first when extra signers exist, so a single key can authorize every later step. It removes each extra signer with `SetOptions` weight 0 and sets the low, medium, and high thresholds to 0/1/1.
+- Signer normalization runs first when extra signers exist, so a single key can authorize every later step. It removes each extra signer with `SetOptions` weight 0 and sets the low, medium, and high thresholds to 0/1/1. This step is a usability and efficiency choice, not a merge precondition: the protocol's subentry check excludes signers, so an account could merge with them in place. Removing them early collapses a multisig flow to one key for the remaining transactions and turns each signer's 0.5 XLM reserve into spendable balance mid-flow, where it can cover fees.
 - Steps with more than 100 operations split into batches of 100, the protocol limit per transaction.
 - A step that turns out to be a no-op (no offers, no data entries) is skipped, not submitted.
 - Soroban steps are one `InvokeHostFunction` per transaction, because each needs its own RPC simulation for footprint, authorization, and resource fee.
