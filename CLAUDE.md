@@ -17,8 +17,8 @@ bun run build                        # next build
 bun lint                             # ESLint, zero errors required
 bun format                           # Prettier (authoritative for formatting)
 bun type-check                       # tsc for app AND tests/tsconfig.json, strict, zero errors
-bun test                             # unit tests (Bun test runner, tests/unit/)
-bun test tests/unit/buildPlan.test.ts  # single test file
+bun run test                         # unit tests (Bun test runner, tests/unit/ only)
+bun test tests/unit/buildPlan.test.ts  # single test file (bare `bun test` also picks up the Playwright spec and fails)
 bun test:e2e                         # Playwright E2E, runs against testnet only
 ```
 
