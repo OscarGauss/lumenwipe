@@ -1,6 +1,7 @@
 import type { Network } from "@/config/networks";
 import { AccountNotFoundError } from "@/lib/utils/errors";
 import { fetchOffersFromAdapter } from "./horizon-adapter";
+import { detectSubEntryMismatch } from "./scan-fallback";
 import type {
   AccountState,
   AccountSigner,
@@ -118,15 +119,7 @@ export async function getLiveAccountState(
     .filter((s): s is AccountSigner => s !== null);
 
   const openOffers = await fetchOffersFromAdapter(address, network);
-
-  const extraSigners = signers.filter((s) => s.key !== address).length;
   const numSubEntries = account.subentry_count;
-  const expectedSubEntries =
-    trustlines.length +
-    openOffers.length +
-    dataEntries.length +
-    extraSigners +
-    poolShares.length * 2;
 
   return {
     address,
@@ -146,6 +139,14 @@ export async function getLiveAccountState(
     trustlines,
     openOffers,
     poolShares,
-    subEntryMismatch: expectedSubEntries < numSubEntries,
+    subEntryMismatch: detectSubEntryMismatch({
+      address,
+      signers,
+      trustlines,
+      openOffers,
+      dataEntries,
+      poolShares,
+      numSubEntries,
+    }),
   };
 }

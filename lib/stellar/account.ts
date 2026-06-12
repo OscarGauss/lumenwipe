@@ -4,7 +4,7 @@ import { fetchOffersFromAdapter } from "./horizon-adapter";
 import { seGet } from "@/lib/se-api/client";
 import { AccountNotFoundError } from "@/lib/utils/errors";
 import { stroopsToXlm } from "@/lib/utils/amounts";
-import { PATH_ROUTING_API_URLS } from "@/config/networks";
+import { detectSubEntryMismatch } from "@/lib/stellar/scan-fallback";
 import type { Network } from "@/config/networks";
 import type {
   AccountState,
@@ -194,19 +194,18 @@ export async function getAccountState(address: string, network: Network): Promis
     }
   }
 
-  // 7. numSubEntries reconciliation - only when offers were fetched from the Horizon adapter
-  // (if the URL is not configured, openOffers=[] and the count would be misleadingly low).
-  let subEntryMismatch = false;
-  if (PATH_ROUTING_API_URLS[network]) {
-    const extraSigners = signers.filter((s) => s.key !== address).length;
-    const expectedSubEntries =
-      trustlines.length +
-      openOffers.length +
-      dataEntries.length +
-      extraSigners +
-      poolShares.length * 2; // pool shares cost 2 base reserves per ledger spec
-    subEntryMismatch = expectedSubEntries < numSubEntries;
-  }
+  // 7. numSubEntries reconciliation. This must run even when the offers adapter
+  // URL is unconfigured (openOffers=[]): an undercounted scan has to surface as
+  // a blocker rather than produce a plan that silently skips entries.
+  const subEntryMismatch = detectSubEntryMismatch({
+    address,
+    signers,
+    trustlines,
+    openOffers,
+    dataEntries,
+    poolShares,
+    numSubEntries,
+  });
 
   return {
     address,
