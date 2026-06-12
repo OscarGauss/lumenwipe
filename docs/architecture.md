@@ -487,7 +487,7 @@ sequenceDiagram
     S->>M: op1 AccountMerge (source into mediator)
     M->>D: op2 Payment (mediator to exchange, with memo)
     Note over D: Exchange credits the user by address + memo
-    Note over S,D: User signs op1; backend co-signs op2 - both apply or neither
+    Note over S,D: User signs op1, backend co-signs op2: both apply or neither
 ```
 
 The mediator is a single, persistent account that the operator funds once. Its ~1 XLM minimum balance is paid once and reused for every close, so the user recovers essentially all of their XLM, including the source account's freed reserves; only standard network fees apply. This is the key difference from a throwaway per-user intermediary, which would sacrifice ~1 XLM on every close.
