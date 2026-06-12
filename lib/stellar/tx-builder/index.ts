@@ -1,5 +1,5 @@
 import type { AccountState } from "@/types/account";
-import type { PlannedStep, StepType } from "@/types/plan";
+import type { PlannedStep, StepType, BuildPlanResult, PlanBlocker } from "@/types/plan";
 import { estimateFeeLumens } from "@/lib/utils/amounts";
 import { batchItems } from "./batching";
 import { OP_BATCH_LIMIT } from "@/config/constants";
@@ -27,8 +27,9 @@ function step(
   };
 }
 
-export function buildPlan(accountState: AccountState, mediatorRequired: boolean): PlannedStep[] {
+export function buildPlan(accountState: AccountState, mediatorRequired: boolean): BuildPlanResult {
   const steps: PlannedStep[] = [];
+  const blockers: PlanBlocker[] = [];
   let idx = 0;
 
   const { signers, thresholds, dataEntries, openOffers, trustlines } = accountState;
@@ -37,6 +38,56 @@ export function buildPlan(accountState: AccountState, mediatorRequired: boolean)
 
   const needsSignerNormalization =
     extraSigners.length > 0 || thresholds.med > 1 || thresholds.high > 1;
+
+  // Sponsoring blocker: numSponsoring > 0 means this account is the reserve sponsor for
+  // entries on other accounts. stellar-core refuses ACCOUNT_MERGE when getNumSponsoring > 0.
+  // Surface this before building the rest of the plan so users don't reach the final step
+  // only to fail.
+  if (accountState.numSponsoring > 0) {
+    blockers.push({
+      message:
+        `This account is sponsoring ${accountState.numSponsoring} entr${accountState.numSponsoring === 1 ? "y" : "ies"} ` +
+        `on other accounts. All sponsorships must be revoked before the account can be merged.`,
+    });
+  }
+
+  // Pool share blocker: liquidity pool share trustlines cost 2 base reserves each and must
+  // be withdrawn from the pool (via a DEX UI) before the trustline can be removed.
+  if (accountState.poolShares.length > 0) {
+    blockers.push({
+      message:
+        `This account holds ${accountState.poolShares.length} liquidity pool share(s). ` +
+        `Withdraw from the pool using a DEX interface (e.g. Stellar Expert) before continuing.`,
+    });
+  }
+
+  // Sub-entry mismatch blocker: we enumerated fewer sub-entries than the ledger reports.
+  // Proceeding would leave unknown entries behind - block rather than build an incomplete plan.
+  if (accountState.subEntryMismatch) {
+    blockers.push({
+      message:
+        "This account has entries that could not be enumerated. " +
+        "The analysis may be incomplete - do not proceed until the discrepancy is resolved.",
+    });
+  }
+
+  // Threshold gating: SetOptions is a HIGH-threshold operation. If the master
+  // key's weight alone cannot reach the current high threshold, the normalization
+  // tx can never be self-authorized - surface this as a blocker before building a
+  // plan that would fail at signing time.
+  if (needsSignerNormalization) {
+    const masterSigner = signers.find((s) => s.key === masterKey);
+    const masterWeight = masterSigner?.weight ?? 0;
+    if (masterWeight < thresholds.high) {
+      blockers.push({
+        message:
+          `The master key has weight ${masterWeight}, but removing signers or changing thresholds ` +
+          `requires weight ${thresholds.high} (the current high threshold). ` +
+          `A hash preimage or pre-authorized transaction is needed to authorize this change. ` +
+          `This flow supports single-key authorization only.`,
+      });
+    }
+  }
 
   if (needsSignerNormalization) {
     steps.push(
@@ -130,5 +181,5 @@ export function buildPlan(accountState: AccountState, mediatorRequired: boolean)
     )
   );
 
-  return steps;
+  return { steps, blockers };
 }

@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { ArrowRight, RefreshCw } from "lucide-react";
 import type { AccountState } from "@/types/account";
-import type { PlannedStep } from "@/types/plan";
+import type { PlannedStep, PlanBlocker } from "@/types/plan";
 import type { Network } from "@/config/networks";
 import { useDemolishStore } from "@/store/demolish";
 import AccountSummaryCard from "./AccountSummaryCard";
@@ -13,6 +13,7 @@ import BlockersPanel from "./BlockersPanel";
 interface PlanViewProps {
   account: AccountState;
   plan: PlannedStep[];
+  blockers: PlanBlocker[];
   destinationAddress: string;
   mediatorRequired: boolean;
   network: Network;
@@ -23,6 +24,7 @@ interface PlanViewProps {
 export default function PlanView({
   account,
   plan,
+  blockers,
   destinationAddress,
   mediatorRequired,
   network,
@@ -49,7 +51,7 @@ export default function PlanView({
         totalFee={totalFee}
       />
 
-      <BlockersPanel blockers={[]} />
+      <BlockersPanel blockers={blockers} />
 
       {mediatorRequired && (
         <div className="bg-stellar/10 border border-stellar/25 rounded-2xl p-4 text-sm">
@@ -87,7 +89,7 @@ export default function PlanView({
 
       <button
         onClick={handleProceed}
-        disabled={plan.length === 0}
+        disabled={plan.length === 0 || blockers.length > 0}
         className="w-full flex items-center justify-center gap-2 bg-stellar text-black font-semibold py-3 px-4 rounded-xl hover:bg-stellar/90 hover:shadow-[0_0_28px_-6px_hsl(var(--stellar)/0.7)] disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none transition-all"
       >
         Begin execution

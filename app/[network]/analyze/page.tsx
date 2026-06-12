@@ -6,7 +6,7 @@ import { Loader2, AlertTriangle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { Network } from "@/config/networks";
 import type { AccountState } from "@/types/account";
-import type { PlannedStep } from "@/types/plan";
+import type { PlannedStep, PlanBlocker } from "@/types/plan";
 import { getMediatorPublicKey } from "@/config/networks";
 import { useDemolishStore } from "@/store/demolish";
 import { buildPlan } from "@/lib/stellar/tx-builder";
@@ -32,6 +32,7 @@ export default function AnalyzePage({ params }: { params: Promise<{ network: Net
 
   const [account, setAccount] = useState<AccountState | null>(null);
   const [plan, setPlanState] = useState<PlannedStep[]>([]);
+  const [blockers, setBlockers] = useState<PlanBlocker[]>([]);
   const [mediatorRequired, setMediatorRequired] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,8 +76,9 @@ export default function AnalyzePage({ params }: { params: Promise<{ network: Net
       setMediatorRequired(needsMediator);
       syncMediatorToStore(needsMediator, mediatorPublicKey);
 
-      const generatedPlan = buildPlan(accountData, needsMediator);
-      setPlanState(generatedPlan);
+      const { steps, blockers: planBlockers } = buildPlan(accountData, needsMediator);
+      setPlanState(steps);
+      setBlockers(planBlockers);
     } catch {
       setError("Failed to analyze account. Please check your connection and try again.");
     } finally {
@@ -145,6 +147,7 @@ export default function AnalyzePage({ params }: { params: Promise<{ network: Net
       <PlanView
         account={account}
         plan={plan}
+        blockers={blockers}
         destinationAddress={effectiveDest!}
         mediatorRequired={mediatorRequired}
         network={routeNetwork}
