@@ -20,7 +20,9 @@ export interface DataEntry {
 export interface Trustline {
   asset: string; // "CODE:ISSUER" or "native"
   balance: string; // in lumens/units as string
-  limit: string;
+  // Only provided by the Horizon-compatible reader; rpc getAssetBalance does not
+  // expose it. Nothing consumes it (trustline removal always uses ChangeTrust limit 0).
+  limit?: string;
   authorized: boolean;
   issuer: string;
   code: string;

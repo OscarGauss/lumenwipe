@@ -42,9 +42,9 @@ export async function fetchLiveTrustlineBalance(
 ): Promise<string> {
   try {
     const asset = new Asset(tl.code, tl.issuer);
-    // server.getTrustline() replaces manual XDR LedgerKey construction (SDK v14+)
-    const entry = await server.getTrustline(accountAddress, asset);
-    return stroopsToXlm(BigInt(entry.balance().toString()));
+    const res = await server.getAssetBalance(accountAddress, asset);
+    if (!res.balanceEntry) return tl.balance;
+    return stroopsToXlm(BigInt(res.balanceEntry.amount));
   } catch {
     return tl.balance;
   }
