@@ -10,6 +10,7 @@ argument-hint: "[data task]"
 API access for reading chain state. Stellar RPC is the preferred entry point for new projects; Horizon remains for legacy and historical-query workflows. For deeper history beyond RPC's 7-day window, use Hubble/Galexie.
 
 ## When to use this skill
+
 - Calling Stellar RPC methods (`getLatestLedger`, `getLedgerEntries`, `getEvents`, `simulateTransaction`, `sendTransaction`)
 - Querying Horizon endpoints (accounts, transactions, operations, effects, ledgers)
 - Streaming live events or operations
@@ -17,6 +18,7 @@ API access for reading chain state. Stellar RPC is the preferred entry point for
 - Choosing between RPC and Horizon for a given workflow
 
 ## Related skills
+
 - Building transactions to send → `../dapp/SKILL.md`
 - Soroban contract simulation and event emission → `../soroban/SKILL.md`
 - Asset balance and trustline lookups → `../assets/SKILL.md`
@@ -24,19 +26,19 @@ API access for reading chain state. Stellar RPC is the preferred entry point for
 
 ---
 
-
 ## Overview
 
 Stellar provides two API paradigms:
 
-| API | Status | Use Case |
-|-----|--------|----------|
-| **Stellar RPC** | Preferred | Soroban, real-time state, new projects |
-| **Horizon** | Legacy-focused | Historical data, legacy applications |
+| API             | Status         | Use Case                               |
+| --------------- | -------------- | -------------------------------------- |
+| **Stellar RPC** | Preferred      | Soroban, real-time state, new projects |
+| **Horizon**     | Legacy-focused | Historical data, legacy applications   |
 
 **Recommendation**: Use Stellar RPC for all new projects. Use Horizon mainly for historical queries and legacy compatibility paths.
 
 ## Quick Navigation
+
 - RPC methods and usage: [Stellar RPC](#stellar-rpc)
 - Horizon endpoints and streaming: [Horizon API (Legacy)](#horizon-api-legacy)
 - Migration strategy: [Migration: Horizon to RPC](#migration-horizon-to-rpc)
@@ -49,12 +51,12 @@ Stellar provides two API paradigms:
 
 > Note: SDF directly provides Futurenet public RPC. For Mainnet RPC, select a provider from the [RPC providers directory](https://developers.stellar.org/docs/data/apis/rpc/providers).
 
-| Network | RPC URL |
-|---------|---------|
-| Mainnet | Provider-specific endpoint (see [RPC providers directory](https://developers.stellar.org/docs/data/apis/rpc/providers)) |
-| Testnet | `https://soroban-testnet.stellar.org` |
-| Futurenet | `https://rpc-futurenet.stellar.org` |
-| Local | `http://localhost:8000/soroban/rpc` |
+| Network   | RPC URL                                                                                                                 |
+| --------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Mainnet   | Provider-specific endpoint (see [RPC providers directory](https://developers.stellar.org/docs/data/apis/rpc/providers)) |
+| Testnet   | `https://soroban-testnet.stellar.org`                                                                                   |
+| Futurenet | `https://rpc-futurenet.stellar.org`                                                                                     |
+| Local     | `http://localhost:8000/soroban/rpc`                                                                                     |
 
 ### Setup
 
@@ -101,9 +103,7 @@ const key = StellarSdk.xdr.LedgerKey.contractData(
 
 const entries = await rpc.getLedgerEntries(key);
 if (entries.entries.length > 0) {
-  const value = StellarSdk.scValToNative(
-    entries.entries[0].val.contractData().val()
-  );
+  const value = StellarSdk.scValToNative(entries.entries[0].val.contractData().val());
 }
 ```
 
@@ -129,7 +129,7 @@ if (response.status === "PENDING") {
   // Poll for result
   let result = await rpc.getTransaction(response.hash);
   while (result.status === "NOT_FOUND") {
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 1000));
     result = await rpc.getTransaction(response.hash);
   }
 
@@ -159,9 +159,7 @@ const events = await rpc.getEvents({
     {
       type: "contract",
       contractIds: [contractId],
-      topics: [
-        ["*", StellarSdk.xdr.ScVal.scvSymbol("transfer").toXDR("base64")],
-      ],
+      topics: [["*", StellarSdk.xdr.ScVal.scvSymbol("transfer").toXDR("base64")]],
     },
   ],
 });
@@ -182,11 +180,11 @@ for (const event of events.events) {
 
 ### Endpoints
 
-| Network | Horizon URL |
-|---------|-------------|
-| Mainnet | `https://horizon.stellar.org` |
+| Network | Horizon URL                           |
+| ------- | ------------------------------------- |
+| Mainnet | `https://horizon.stellar.org`         |
 | Testnet | `https://horizon-testnet.stellar.org` |
-| Local | `http://localhost:8000` |
+| Local   | `http://localhost:8000`               |
 
 ### Setup
 
@@ -230,21 +228,13 @@ const transactions = await server
   .call();
 
 // Specific transaction
-const tx = await server
-  .transactions()
-  .transaction(txHash)
-  .call();
+const tx = await server.transactions().transaction(txHash).call();
 ```
 
 #### Get Operations
 
 ```typescript
-const operations = await server
-  .operations()
-  .forAccount(publicKey)
-  .order("desc")
-  .limit(20)
-  .call();
+const operations = await server.operations().forAccount(publicKey).order("desc").limit(20).call();
 
 for (const op of operations.records) {
   console.log(op.type, op.created_at);
@@ -254,11 +244,7 @@ for (const op of operations.records) {
 #### Get Payments
 
 ```typescript
-const payments = await server
-  .payments()
-  .forAccount(publicKey)
-  .order("desc")
-  .call();
+const payments = await server.payments().forAccount(publicKey).order("desc").call();
 
 for (const payment of payments.records) {
   if (payment.type === "payment") {
@@ -272,11 +258,7 @@ for (const payment of payments.records) {
 #### Get Effects
 
 ```typescript
-const effects = await server
-  .effects()
-  .forAccount(publicKey)
-  .limit(50)
-  .call();
+const effects = await server.effects().forAccount(publicKey).limit(50).call();
 ```
 
 #### Streaming (Server-Sent Events)
@@ -356,10 +338,7 @@ const result = await pollForResult(response.hash);
 
 ```typescript
 // Horizon - full history
-const allTxs = await horizonServer
-  .transactions()
-  .forAccount(publicKey)
-  .call();
+const allTxs = await horizonServer.transactions().forAccount(publicKey).call();
 
 // RPC - most methods limited to 7 days
 // Exception: getLedgers can query back to genesis (Infinite Scroll)
@@ -402,11 +381,13 @@ LIMIT 100
 ### Galexie
 
 Self-hosted data pipeline for processing Stellar ledger data:
+
 - https://github.com/stellar/galexie
 
 ### Data Lake
 
-RPC "Infinite Scroll" is powered by the Stellar data lake — a cloud-based object store (SEP-0054 format):
+RPC "Infinite Scroll" is powered by the Stellar data lake - a cloud-based object store (SEP-0054 format):
+
 - **Public access**: `s3://aws-public-blockchain/v1.1/stellar/ledgers/pubnet` (AWS Open Data)
 - **Self-host**: Use Galexie to export to AWS S3 or Google Cloud Storage
 - **Hosted**: [Quasar (Lightsail Network)](https://quasar.lightsail.network) provides hosted Galexie Data Lake + Archive RPC endpoints
@@ -418,10 +399,10 @@ RPC "Infinite Scroll" is powered by the Stellar data lake — a cloud-based obje
 
 For complex queries, event streaming, or custom data pipelines beyond what RPC/Horizon provide:
 
-- **Mercury** — Stellar-native indexer with Retroshades, GraphQL API (https://mercurydata.app)
-- **SubQuery** — Multi-chain indexer with Stellar/Soroban support, event handlers (https://subquery.network)
-- **Goldsky** — Real-time data replication pipelines and subgraphs (https://goldsky.com)
-- **StellarExpert API** — Free, no-auth REST API for assets, accounts, ledger resolution (https://stellar.expert/openapi.html)
+- **Mercury** - Stellar-native indexer with Retroshades, GraphQL API (https://mercurydata.app)
+- **SubQuery** - Multi-chain indexer with Stellar/Soroban support, event handlers (https://subquery.network)
+- **Goldsky** - Real-time data replication pipelines and subgraphs (https://goldsky.com)
+- **StellarExpert API** - Free, no-auth REST API for assets, accounts, ledger resolution (https://stellar.expert/openapi.html)
 
 See the full indexer directory: https://developers.stellar.org/docs/data/indexers
 
@@ -480,12 +461,14 @@ export const horizon = new StellarSdk.Horizon.Server(config.horizonUrl);
 ## Best Practices
 
 ### Use RPC for:
+
 - New application development
 - Soroban contract interactions
 - Transaction simulation and submission
 - Real-time account state
 
 ### Use Horizon for:
+
 - Historical transaction queries
 - Payment streaming
 - Legacy application maintenance
@@ -521,6 +504,7 @@ try {
 ### Rate Limiting
 
 Both RPC and Horizon have rate limits:
+
 - Use exponential backoff for retries
 - Cache responses where appropriate
 - Consider running your own nodes for high-volume applications
@@ -535,7 +519,7 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3): Promise<T> {
       lastError = error;
       if (error.response?.status === 429) {
         // Rate limited - exponential backoff
-        await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+        await new Promise((r) => setTimeout(r, Math.pow(2, i) * 1000));
       } else {
         throw error;
       }

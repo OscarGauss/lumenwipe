@@ -10,6 +10,7 @@ argument-hint: "[asset task]"
 Stellar's native token mechanism: classic asset issuance, trustlines, and the Stellar Asset Contract (SAC) bridge that makes classic assets usable from Soroban. Default to classic assets over custom Soroban tokens unless you need custom logic.
 
 ## When to use this skill
+
 - Issuing a new asset (stablecoin, security token, utility token)
 - Setting up trustlines from a client or contract
 - Managing issuer flags (auth required, auth revocable, clawback)
@@ -17,13 +18,13 @@ Stellar's native token mechanism: classic asset issuance, trustlines, and the St
 - Building regulated-asset flows (compliance, KYC, freeze)
 
 ## Related skills
+
 - Custom token contracts (when classic isn't enough) → `../soroban/SKILL.md`
 - UI flows for trustline creation and asset display → `../dapp/SKILL.md`
 - Looking up balances and trustline state → `../data/SKILL.md`
 - Token-related SEPs (SEP-41, SEP-7, etc.) → `../standards/SKILL.md`
 
 ---
-
 
 ## Overview
 
@@ -38,11 +39,11 @@ Stellar has two token mechanisms:
 
 ### Asset Types
 
-| Type | Description |
-|------|-------------|
-| Native (XLM) | Stellar's native currency, no trustline needed |
-| Credit | Issued by an account, requires trustline |
-| Liquidity Pool Shares | Represent LP positions |
+| Type                  | Description                                    |
+| --------------------- | ---------------------------------------------- |
+| Native (XLM)          | Stellar's native currency, no trustline needed |
+| Credit                | Issued by an account, requires trustline       |
+| Liquidity Pool Shares | Represent LP positions                         |
 
 ### Asset Identifiers
 
@@ -160,8 +161,8 @@ const setFlagsTx = new StellarSdk.TransactionBuilder(issuerAccount, {
   .addOperation(
     StellarSdk.Operation.setOptions({
       setFlags:
-        StellarSdk.AuthRequiredFlag |    // Trustlines require approval
-        StellarSdk.AuthRevocableFlag |   // Can freeze trustlines
+        StellarSdk.AuthRequiredFlag | // Trustlines require approval
+        StellarSdk.AuthRevocableFlag | // Can freeze trustlines
         StellarSdk.AuthClawbackEnabledFlag, // Can clawback tokens
     })
   )
@@ -171,12 +172,12 @@ const setFlagsTx = new StellarSdk.TransactionBuilder(issuerAccount, {
 
 ### Flag Descriptions
 
-| Flag | Effect |
-|------|--------|
-| `AUTH_REQUIRED` | Users must get approval before receiving tokens |
-| `AUTH_REVOCABLE` | Issuer can freeze user balances |
-| `AUTH_IMMUTABLE` | Flags cannot be changed (permanent) |
-| `AUTH_CLAWBACK_ENABLED` | Issuer can clawback tokens from accounts |
+| Flag                    | Effect                                          |
+| ----------------------- | ----------------------------------------------- |
+| `AUTH_REQUIRED`         | Users must get approval before receiving tokens |
+| `AUTH_REVOCABLE`        | Issuer can freeze user balances                 |
+| `AUTH_IMMUTABLE`        | Flags cannot be changed (permanent)             |
+| `AUTH_CLAWBACK_ENABLED` | Issuer can clawback tokens from accounts        |
 
 ### Authorize Trustline
 
@@ -243,10 +244,7 @@ const changeTrustTx = new StellarSdk.TransactionBuilder(userAccount, {
 ```typescript
 const account = await server.loadAccount(userPublicKey);
 const trustline = account.balances.find(
-  (b) =>
-    b.asset_type !== "native" &&
-    b.asset_code === "USDC" &&
-    b.asset_issuer === usdcIssuer
+  (b) => b.asset_type !== "native" && b.asset_code === "USDC" && b.asset_issuer === usdcIssuer
 );
 
 if (trustline) {
@@ -303,6 +301,7 @@ pub fn transfer_asset(
 ### SAC vs Custom Token Interface
 
 SAC implements the standard Soroban token interface:
+
 - `balance(id: Address) -> i128`
 - `transfer(from: Address, to: Address, amount: i128)`
 - `approve(from: Address, spender: Address, amount: i128, expiration_ledger: u32)`
@@ -314,6 +313,7 @@ SAC implements the standard Soroban token interface:
 ## When to Use What
 
 ### Use Stellar Assets When:
+
 - Standard fungible token (currency, stablecoin)
 - Need full ecosystem support (wallets, exchanges)
 - Regulatory compliance features (freeze, clawback)
@@ -321,6 +321,7 @@ SAC implements the standard Soroban token interface:
 - DEX integration via order book
 
 ### Use Soroban Custom Tokens When:
+
 - Complex transfer logic (royalties, fees, restrictions)
 - Custom authorization schemes
 - Non-standard token behaviors
@@ -328,6 +329,7 @@ SAC implements the standard Soroban token interface:
 - NFTs or semi-fungible tokens
 
 ### Use SAC When:
+
 - Need Stellar Asset in Soroban contract
 - Building DeFi protocols with existing assets
 - Bridge between classic and smart contract operations
@@ -352,27 +354,16 @@ for (const balance of account.balances) {
 
 ```typescript
 // Search for assets by code
-const assets = await server
-  .assets()
-  .forCode("USDC")
-  .call();
+const assets = await server.assets().forCode("USDC").call();
 
 // Get specific asset details
-const assetDetails = await server
-  .assets()
-  .forCode("USDC")
-  .forIssuer(issuerPublicKey)
-  .call();
+const assetDetails = await server.assets().forCode("USDC").forIssuer(issuerPublicKey).call();
 ```
 
 ### Get Asset Statistics
 
 ```typescript
-const stats = await server
-  .assets()
-  .forCode("USDC")
-  .forIssuer(issuerPublicKey)
-  .call();
+const stats = await server.assets().forCode("USDC").forIssuer(issuerPublicKey).call();
 
 // stats includes:
 // - amount: total issued
@@ -426,18 +417,21 @@ Standard contract interface for NFTs on Soroban. Reference implementations avail
 ## Best Practices
 
 ### Asset Issuance
+
 - Use separate issuing and distribution accounts
 - Lock issuer after initial distribution for fixed supply
 - Publish stellar.toml with asset metadata
 - Consider multisig for issuer account
 
 ### Trustline Management
+
 - Check trustline exists before sending payments
 - Handle trustline creation in onboarding flow
 - Respect trustline limits
 - Monitor for frozen/deauthorized status
 
 ### Security
+
 - Validate asset issuer, not just code
 - Be cautious of assets with clawback enabled
 - Verify stellar.toml from authoritative source
