@@ -131,7 +131,7 @@ export default function Faq() {
               }`}
             >
               <div className="overflow-hidden">
-                <p className="px-5 pb-5 pr-10 text-sm leading-relaxed text-white/55 sm:px-6 sm:pb-6">
+                <p className="px-5 pb-5 pr-10 text-sm leading-relaxed text-white/85 sm:px-6 sm:pb-6">
                   {item.a}
                 </p>
               </div>

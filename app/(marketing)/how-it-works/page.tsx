@@ -116,7 +116,7 @@ export default function HowItWorksPage() {
           <h1 className="mkt-display mx-auto mt-5 max-w-3xl text-[2.4rem] font-extrabold leading-[1.02] text-white sm:text-6xl">
             A deterministic plan for an irreversible action.
           </h1>
-          <p className="mx-auto mt-6 max-w-2xl text-[1.05rem] leading-relaxed text-white/60">
+          <p className="mx-auto mt-6 max-w-2xl text-[1.05rem] leading-relaxed text-white/85">
             Closing an account is several sequential transactions in the right order. LumenWipe
             shows the whole plan up front, then executes it one confirmed step at a time, re-reading
             live state and simulating before every signature, so nothing is ever signed on stale
@@ -148,7 +148,7 @@ export default function HowItWorksPage() {
             <h2 className="mkt-display mt-4 text-2xl font-bold text-white sm:text-4xl">
               Every step runs the same safe loop.
             </h2>
-            <p className="mt-4 leading-relaxed text-white/55">
+            <p className="mt-4 leading-relaxed text-white/85">
               No step trusts a cached value. Each one reconciles against the live ledger, simulates,
               and waits for your explicit approval before a single byte is signed.
             </p>
@@ -162,12 +162,12 @@ export default function HowItWorksPage() {
                     <s.icon className="h-4 w-4" />
                   </span>
                   <h3 className="mt-3 text-sm font-semibold text-white">{s.label}</h3>
-                  <p className="mt-0.5 mkt-mono text-[0.66rem] text-white/40">{s.note}</p>
+                  <p className="mt-0.5 mkt-mono text-[0.66rem] text-white/55">{s.note}</p>
                 </div>
               </Reveal>
             ))}
           </div>
-          <p className="mt-5 inline-flex items-center gap-2 mkt-mono text-xs text-white/40">
+          <p className="mt-5 inline-flex items-center gap-2 mkt-mono text-xs text-white/55">
             <Repeat className="h-3.5 w-3.5 text-stellar" />
             repeats for every step in the plan
           </p>
@@ -202,8 +202,8 @@ export default function HowItWorksPage() {
                     </span>
                     <h3 className="text-base font-semibold text-white">{s.title}</h3>
                   </div>
-                  <p className="mt-2 text-sm leading-relaxed text-white/55">{s.body}</p>
-                  <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-white/8 bg-black/30 px-2.5 py-1 mkt-mono text-[0.68rem] text-white/55">
+                  <p className="mt-2 text-sm leading-relaxed text-white/85">{s.body}</p>
+                  <div className="mt-3 inline-flex items-center gap-2 rounded-lg border border-white/8 bg-black/30 px-2.5 py-1 mkt-mono text-[0.68rem] text-white/65">
                     <span className="text-stellar/70">op</span>
                     {s.op}
                   </div>
@@ -222,7 +222,7 @@ export default function HowItWorksPage() {
             <h2 className="mkt-display mt-4 text-3xl font-bold text-white sm:text-[2.6rem] sm:leading-[1.05]">
               The CEX mediator flow.
             </h2>
-            <p className="mt-5 leading-relaxed text-white/55">
+            <p className="mt-5 leading-relaxed text-white/85">
               Exchanges don&apos;t support{" "}
               <span className="mkt-mono text-white/80">ACCOUNT_MERGE</span>. LumenWipe bridges the
               gap with a transparent, single-use mediator account, generated in your browser, used
@@ -247,7 +247,7 @@ export default function HowItWorksPage() {
                   "op" in node ? (
                     <div
                       key={i}
-                      className="flex flex-row items-center justify-center gap-2 text-white/35 sm:flex-col"
+                      className="flex flex-row items-center justify-center gap-2 text-white/50 sm:flex-col"
                     >
                       <ArrowRight className="hidden h-4 w-4 sm:block" />
                       <ArrowDown className="h-4 w-4 sm:hidden" />
@@ -267,12 +267,12 @@ export default function HowItWorksPage() {
                       }`}
                     >
                       <div className="text-sm font-semibold text-white">{node.label}</div>
-                      <div className="mt-1 text-[0.72rem] text-white/45">{node.sub}</div>
+                      <div className="mt-1 text-[0.72rem] text-white/55">{node.sub}</div>
                     </div>
                   )
                 )}
               </div>
-              <p className="mt-6 text-center text-sm text-white/45">
+              <p className="mt-6 text-center text-sm text-white/65">
                 The ~1 XLM that stays as the mediator&apos;s base reserve is disclosed upfront.
                 Known exchanges are validated against a registry that enforces the correct memo
                 type.
@@ -290,7 +290,7 @@ export default function HowItWorksPage() {
             <h2 className="mkt-display mt-4 text-2xl font-bold text-white sm:text-3xl">
               Close the tab. Pick up where you left off.
             </h2>
-            <p className="mt-4 leading-relaxed text-white/55">
+            <p className="mt-4 leading-relaxed text-white/85">
               The entire wind-down is an explicit state machine, persisted in IndexedDB, never your
               keys. On return, the session is reconciled against on-chain state, and any completed
               step is skipped, so nothing double-executes.
@@ -312,7 +312,7 @@ export default function HowItWorksPage() {
             <h2 className="mkt-display mt-4 text-2xl font-bold text-white sm:text-3xl">
               Three layers, one trust boundary.
             </h2>
-            <p className="mt-4 leading-relaxed text-white/55">
+            <p className="mt-4 leading-relaxed text-white/85">
               No bespoke indexer, no Horizon dependency. Every read source sits behind an adapter,
               so any compatible provider can be swapped in without touching the rest of the system.
             </p>
@@ -345,11 +345,11 @@ export default function HowItWorksPage() {
                 >
                   <div className="min-w-0">
                     <div className="text-sm font-semibold text-white">{row.l}</div>
-                    <div className="truncate mkt-mono text-[0.66rem] text-white/40">{row.s}</div>
+                    <div className="truncate mkt-mono text-[0.66rem] text-white/55">{row.s}</div>
                   </div>
                   <span
                     className={`shrink-0 mkt-mono text-[0.58rem] uppercase tracking-wider ${
-                      row.tone ? "text-stellar" : "text-white/35"
+                      row.tone ? "text-stellar" : "text-white/50"
                     }`}
                   >
                     {row.note}

@@ -104,7 +104,7 @@ export default function ExecutionPlanDemo() {
       </div>
 
       {/* account line */}
-      <div className="flex items-center gap-2 py-3 text-[0.7rem] mkt-mono text-white/55">
+      <div className="flex items-center gap-2 py-3 text-[0.7rem] mkt-mono text-white/65">
         <span className="text-white/80">GDEMO…X4F2</span>
         <svg width="22" height="8" viewBox="0 0 22 8" fill="none" aria-hidden="true">
           <path
@@ -155,7 +155,7 @@ export default function ExecutionPlanDemo() {
               <span className="relative z-10 min-w-0 flex-1">
                 <span
                   className={`block truncate text-[0.82rem] font-medium transition-colors ${
-                    isDone || isActive ? "text-white" : "text-white/45"
+                    isDone || isActive ? "text-white" : "text-white/55"
                   }`}
                 >
                   {step.label}
@@ -165,7 +165,7 @@ export default function ExecutionPlanDemo() {
                     </span>
                   )}
                 </span>
-                <span className="block truncate text-[0.68rem] mkt-mono text-white/35">
+                <span className="block truncate text-[0.68rem] mkt-mono text-white/50">
                   {step.note}
                 </span>
               </span>
@@ -186,8 +186,8 @@ export default function ExecutionPlanDemo() {
       {/* footer meter */}
       <div className="mt-3.5 rounded-xl border border-white/8 bg-black/30 p-3.5">
         <div className="flex items-center justify-between">
-          <span className="mkt-eyebrow text-white/45">Recovered</span>
-          <span className="mkt-mono text-[0.65rem] text-white/40 tabular-nums">
+          <span className="mkt-eyebrow text-white/55">Recovered</span>
+          <span className="mkt-mono text-[0.65rem] text-white/55 tabular-nums">
             {completed}/{TOTAL} steps
           </span>
         </div>
@@ -199,7 +199,7 @@ export default function ExecutionPlanDemo() {
           >
             {recovered.toFixed(2)}
           </span>
-          <span className="mkt-mono text-xs text-white/50">XLM</span>
+          <span className="mkt-mono text-xs text-white/65">XLM</span>
         </div>
         <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full bg-white/8">
           <div
@@ -207,7 +207,7 @@ export default function ExecutionPlanDemo() {
             style={{ width: `${pct}%` }}
           />
         </div>
-        <p className="mt-2 text-[0.68rem] text-white/40">
+        <p className="mt-2 text-[0.68rem] text-white/55">
           {done ? (
             <span className="text-value/90">Account closed and removed from the ledger.</span>
           ) : (

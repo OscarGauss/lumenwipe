@@ -23,16 +23,16 @@ export default function LiveStats() {
 
   return (
     <div
-      className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 mkt-mono text-[0.72rem] text-white/60"
+      className="inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 mkt-mono text-[0.72rem] text-white/65"
       style={{ visibility: hasData ? "visible" : "hidden" }}
       aria-hidden={!hasData}
     >
       <span className="h-1.5 w-1.5 rounded-full bg-value mkt-pulse" />
       <span className="tabular-nums text-white">{closed.toLocaleString()}</span>
-      <span className="text-white/45">accounts closed</span>
+      <span className="text-white/65">accounts closed</span>
       <span className="text-white/25">·</span>
       <span className="tabular-nums text-value">{xlmStr} XLM</span>
-      <span className="text-white/45">recovered on mainnet</span>
+      <span className="text-white/65">recovered on mainnet</span>
     </div>
   );
 }

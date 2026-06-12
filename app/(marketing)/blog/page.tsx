@@ -32,7 +32,7 @@ export default function BlogPage() {
         <h1 className="mkt-display text-4xl font-extrabold text-white mt-4 mb-3 tracking-tight">
           Field notes on closing Stellar accounts
         </h1>
-        <p className="text-white/55 text-base max-w-2xl leading-relaxed">
+        <p className="text-white/85 text-base max-w-2xl leading-relaxed">
           Technical deep dives, project updates, and guides on Stellar account management, reserve
           recovery, and non-custodial tooling.
         </p>
@@ -45,7 +45,7 @@ export default function BlogPage() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 text-white/45 text-sm">No articles published yet.</div>
+        <div className="text-center py-20 text-white/65 text-sm">No articles published yet.</div>
       )}
     </div>
   );

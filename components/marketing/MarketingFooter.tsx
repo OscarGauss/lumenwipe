@@ -51,7 +51,7 @@ export default function MarketingFooter() {
         <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div>
             <Logo />
-            <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/50">
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-white/65">
               Close any Stellar account cleanly and recover the XLM locked in its reserves.
               Non-custodial, client-side, open source.
             </p>
@@ -61,7 +61,7 @@ export default function MarketingFooter() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="GitHub"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-white/60 transition-colors hover:border-white/20 hover:text-white"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 text-white/65 transition-colors hover:border-white/20 hover:text-white"
               >
                 <Github className="h-4 w-4" />
               </a>
@@ -70,7 +70,7 @@ export default function MarketingFooter() {
 
           {COLS.map((col) => (
             <div key={col.title}>
-              <p className="mkt-eyebrow text-white/40">{col.title}</p>
+              <p className="mkt-eyebrow text-white/55">{col.title}</p>
               <ul className="mt-4 space-y-2.5">
                 {col.links.map((l) => (
                   <li key={l.label}>
@@ -78,7 +78,7 @@ export default function MarketingFooter() {
                       href={l.href}
                       target={l.external ? "_blank" : undefined}
                       rel={l.external ? "noopener noreferrer" : undefined}
-                      className="group inline-flex items-center gap-1 text-sm text-white/55 transition-colors hover:text-white"
+                      className="group inline-flex items-center gap-1 text-sm text-white/65 transition-colors hover:text-white"
                     >
                       {l.label}
                       {l.external && (
@@ -92,7 +92,7 @@ export default function MarketingFooter() {
           ))}
         </div>
 
-        <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-white/8 pt-6 text-xs text-white/40 sm:flex-row sm:items-center">
+        <div className="mt-12 flex flex-col items-start justify-between gap-3 border-t border-white/8 pt-6 text-xs text-white/55 sm:flex-row sm:items-center">
           <p>© {2026} LumenWipe · Open source under Apache 2.0.</p>
           <p className="mkt-mono">Non-custodial · Client-side signing</p>
         </div>

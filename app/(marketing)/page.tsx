@@ -126,7 +126,7 @@ export default function LandingPage() {
               in your Stellar account.
             </h1>
 
-            <p className="mt-6 max-w-xl text-[1.05rem] leading-relaxed text-white/60">
+            <p className="mt-6 max-w-xl text-[1.05rem] leading-relaxed text-white/85">
               LumenWipe walks you through closing a Stellar account from start to finish:
               trustlines, offers, data entries, signers, even Soroban DeFi positions. It converts
               what&apos;s left to XLM and merges it out to your wallet or exchange. One guided flow,
@@ -149,7 +149,7 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 mkt-mono text-[0.72rem] text-white/45">
+            <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-2 mkt-mono text-[0.72rem] text-white/65">
               <span className="inline-flex items-center gap-1.5">
                 <ShieldCheck className="h-3.5 w-3.5 text-stellar" />
                 Keys never leave your browser
@@ -186,7 +186,7 @@ export default function LandingPage() {
                 className={`px-4 py-6 ${i >= 2 ? "border-t border-white/8 lg:border-t-0" : ""}`}
               >
                 <div className="mkt-display text-2xl font-bold text-white sm:text-3xl">{s.n}</div>
-                <div className="mt-1 text-[0.78rem] leading-snug text-white/45">{s.l}</div>
+                <div className="mt-1 text-[0.78rem] leading-snug text-white/65">{s.l}</div>
               </div>
             ))}
           </div>
@@ -200,7 +200,7 @@ export default function LandingPage() {
           <h2 className="mkt-display mt-4 max-w-2xl text-3xl font-bold text-white sm:text-[2.6rem] sm:leading-[1.05]">
             Your lumens are locked, and the exit is a maze.
           </h2>
-          <p className="mt-5 max-w-2xl text-[1.02rem] leading-relaxed text-white/55">
+          <p className="mt-5 max-w-2xl text-[1.02rem] leading-relaxed text-white/85">
             Every Stellar account holds XLM in reserve: 1 XLM for the account itself, plus 0.5 XLM
             for every trustline, offer, data entry, and signer. That reserve is only recoverable by
             closing the account, and closing one cleanly is harder than it sounds.
@@ -211,8 +211,8 @@ export default function LandingPage() {
           {/* reserve breakdown */}
           <Reveal className="mkt-panel rounded-2xl p-6">
             <div className="flex items-center justify-between">
-              <span className="mkt-eyebrow text-white/45">Locked reserve</span>
-              <span className="mkt-mono text-xs text-white/40">example account</span>
+              <span className="mkt-eyebrow text-white/55">Locked reserve</span>
+              <span className="mkt-mono text-xs text-white/55">example account</span>
             </div>
             <div className="mt-5 space-y-3.5">
               {RESERVE.map((r) => (
@@ -233,7 +233,7 @@ export default function LandingPage() {
             <div className="mt-5 flex items-baseline justify-between border-t border-white/10 pt-4">
               <span className="text-sm font-semibold text-white">Total locked</span>
               <span className="mkt-display text-2xl font-bold text-value tabular-nums">
-                5.00 <span className="text-sm font-normal text-white/50">XLM</span>
+                5.00 <span className="text-sm font-normal text-white/65">XLM</span>
               </span>
             </div>
           </Reveal>
@@ -266,7 +266,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h3 className="text-[0.98rem] font-semibold text-white">{t.title}</h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-white/50">{t.body}</p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-white/85">{t.body}</p>
                 </div>
               </Reveal>
             ))}
@@ -282,7 +282,7 @@ export default function LandingPage() {
             <h2 className="mkt-display mt-4 text-3xl font-bold text-white sm:text-[2.6rem] sm:leading-[1.05]">
               One guided flow. Eight steps. Everything recovered.
             </h2>
-            <p className="mt-5 text-[1.02rem] leading-relaxed text-white/55">
+            <p className="mt-5 text-[1.02rem] leading-relaxed text-white/85">
               LumenWipe reads the whole account, builds a deterministic ordered plan, and executes
               it step by step, re-reading live state and simulating before every signature. You
               confirm each move; nothing happens without you.
@@ -302,7 +302,7 @@ export default function LandingPage() {
                     </span>
                   </div>
                   <h3 className="mt-3.5 text-sm font-semibold text-white">{s.label}</h3>
-                  <p className="mt-1 text-xs leading-relaxed text-white/45">{s.desc}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-white/65">{s.desc}</p>
                 </div>
               </Reveal>
             ))}
@@ -341,7 +341,7 @@ export default function LandingPage() {
                   <h3 className="mt-4 text-lg font-semibold text-white">
                     Full Soroban DeFi coverage
                   </h3>
-                  <p className="mt-2 max-w-md text-sm leading-relaxed text-white/55">
+                  <p className="mt-2 max-w-md text-sm leading-relaxed text-white/85">
                     The piece the original demolisher lacks. LumenWipe detects positions through
                     OctoPos, then exits each one with its own protocol adapter, repaying loans,
                     withdrawing liquidity, and unstaking before it removes the trustline.
@@ -397,7 +397,7 @@ export default function LandingPage() {
                   <f.icon className="h-5 w-5" />
                 </div>
                 <h3 className="mt-4 text-[0.98rem] font-semibold text-white">{f.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-white/50">{f.body}</p>
+                <p className="mt-1.5 text-sm leading-relaxed text-white/85">{f.body}</p>
               </div>
             </Reveal>
           ))}
@@ -416,7 +416,7 @@ export default function LandingPage() {
               <h2 className="mkt-display mt-4 text-3xl font-bold text-white sm:text-[2.6rem] sm:leading-[1.05]">
                 The trust boundary is your browser.
               </h2>
-              <p className="mt-5 text-[1.02rem] leading-relaxed text-white/55">
+              <p className="mt-5 text-[1.02rem] leading-relaxed text-white/85">
                 LumenWipe builds transactions that drain accounts irreversibly, so the design starts
                 from that fact. Your keys are created and used only in your browser and never reach
                 a server. The backend can&apos;t touch your account: its one signing key is the
@@ -456,13 +456,13 @@ export default function LandingPage() {
                   >
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-semibold text-white">{layer.label}</div>
-                      <div className="mkt-mono text-[0.68rem] text-white/40 leading-snug break-words">
+                      <div className="mkt-mono text-[0.68rem] text-white/55 leading-snug break-words">
                         {layer.sub}
                       </div>
                     </div>
                     <span
                       className={`shrink-0 mkt-mono text-[0.6rem] uppercase tracking-wider whitespace-nowrap ${
-                        layer.tone === "stellar" ? "text-stellar" : "text-white/35"
+                        layer.tone === "stellar" ? "text-stellar" : "text-white/50"
                       }`}
                     >
                       {layer.note}
@@ -522,7 +522,7 @@ export default function LandingPage() {
 
       {/* ============================ ECOSYSTEM MARQUEE ============================ */}
       <section className="py-14">
-        <p className="mb-6 text-center mkt-eyebrow text-white/35">
+        <p className="mb-6 text-center mkt-eyebrow text-white/55">
           Wallets, protocols & data sources it speaks to
         </p>
         <div className="mkt-marquee-track relative flex overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_12%,#000_88%,transparent)]">
@@ -530,7 +530,7 @@ export default function LandingPage() {
             {[...ECOSYSTEM, ...ECOSYSTEM].map((name, i) => (
               <span
                 key={`${name}-${i}`}
-                className="shrink-0 rounded-lg border border-white/8 bg-white/[0.02] px-4 py-2 mkt-mono text-sm text-white/55"
+                className="shrink-0 rounded-lg border border-white/8 bg-white/[0.02] px-4 py-2 mkt-mono text-sm text-white/65"
               >
                 {name}
               </span>
@@ -546,14 +546,14 @@ export default function LandingPage() {
           <h2 className="mkt-display mt-4 text-3xl font-bold text-white sm:text-[2.6rem]">
             Questions, answered.
           </h2>
-          <p className="mt-4 text-white/55">
+          <p className="mt-4 text-white/85">
             Closing an account is irreversible. Here&apos;s exactly how LumenWipe keeps it safe.
           </p>
         </Reveal>
         <div className="mt-10">
           <Faq />
         </div>
-        <p className="mt-6 text-center text-sm text-white/45">
+        <p className="mt-6 text-center text-sm text-white/65">
           Still curious?{" "}
           <a
             href="https://docs.lumenwipe.com"
@@ -577,7 +577,7 @@ export default function LandingPage() {
               <h2 className="mkt-display mx-auto max-w-2xl text-3xl font-bold leading-[1.05] text-white sm:text-5xl">
                 Reclaim the XLM that&apos;s been sitting locked.
               </h2>
-              <p className="mx-auto mt-5 max-w-lg text-[1.02rem] text-white/60">
+              <p className="mx-auto mt-5 max-w-lg text-[1.02rem] text-white/85">
                 Try the entire flow on testnet with no funds at risk, then switch to mainnet for the
                 real close.
               </p>
@@ -596,7 +596,7 @@ export default function LandingPage() {
                   Try on testnet
                 </Link>
               </div>
-              <div className="mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mkt-mono text-[0.7rem] text-white/40">
+              <div className="mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mkt-mono text-[0.7rem] text-white/55">
                 <span className="inline-flex items-center gap-1.5">
                   <Check className="h-3.5 w-3.5 text-stellar" /> No signup
                 </span>
