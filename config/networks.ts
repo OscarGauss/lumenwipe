@@ -43,6 +43,22 @@ export function isValidNetwork(value: string): value is Network {
   return VALID_NETWORKS.includes(value as Network);
 }
 
+function buildRpcHeaders(name?: string, value?: string): Record<string, string> {
+  if (!name) return {};
+  return { [name]: value ?? "" };
+}
+
+export const RPC_HEADERS: Record<Network, Record<string, string>> = {
+  mainnet: buildRpcHeaders(
+    process.env.NEXT_PUBLIC_STELLAR_RPC_HEADER_NAME_MAINNET,
+    process.env.NEXT_PUBLIC_STELLAR_RPC_HEADER_VALUE_MAINNET
+  ),
+  testnet: buildRpcHeaders(
+    process.env.NEXT_PUBLIC_STELLAR_RPC_HEADER_NAME_TESTNET,
+    process.env.NEXT_PUBLIC_STELLAR_RPC_HEADER_VALUE_TESTNET
+  ),
+};
+
 /**
  * Shared mediator (intermediary) account used to forward funds to exchange
  * destinations that don't support ACCOUNT_MERGE. The operator funds this
