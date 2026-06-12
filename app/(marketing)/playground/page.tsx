@@ -15,7 +15,7 @@ export default function PlaygroundPage() {
         <h1 className="mkt-display text-4xl text-white sm:text-5xl">
           Trash an account. Then watch it vanish.
         </h1>
-        <p className="mt-4 text-base leading-relaxed text-white/60">
+        <p className="mt-4 text-base leading-relaxed text-white/85">
           Everything here happens on the Stellar testnet with a throwaway custodial account - no
           wallet, no risk, real transactions. Every animation is backed by an on-chain transaction
           you can verify in the explorer.

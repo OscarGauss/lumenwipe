@@ -136,7 +136,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         {/* Breadcrumb */}
         <Link
           href="/blog"
-          className="inline-flex items-center gap-1.5 mkt-mono text-xs text-white/50 hover:text-white transition-colors mb-8"
+          className="inline-flex items-center gap-1.5 mkt-mono text-xs text-white/65 hover:text-white transition-colors mb-8"
         >
           <ArrowLeft className="h-3 w-3" />
           All articles
@@ -153,8 +153,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
               <h1 className="mkt-display text-3xl md:text-[2.6rem] font-extrabold text-white leading-[1.05] mb-4 tracking-tight">
                 {post.title}
               </h1>
-              <p className="text-white/55 text-base leading-relaxed mb-5">{post.description}</p>
-              <div className="flex items-center gap-4 mkt-mono text-xs text-white/45">
+              <p className="text-white/85 text-base leading-relaxed mb-5">{post.description}</p>
+              <div className="flex items-center gap-4 mkt-mono text-xs text-white/55">
                 <span className="flex items-center gap-1.5">
                   <Calendar className="h-3 w-3" />
                   {date}
