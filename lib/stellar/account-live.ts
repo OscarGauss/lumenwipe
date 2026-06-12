@@ -1,22 +1,49 @@
-import { PATH_ROUTING_API_URLS } from "@/config/networks";
+import type { Network } from "@/config/networks";
 import { AccountNotFoundError } from "@/lib/utils/errors";
-import type { AccountState, AccountSigner, DataEntry, OpenOffer, Trustline } from "@/types/account";
+import { fetchOffersFromAdapter } from "./horizon-adapter";
+import type {
+  AccountState,
+  AccountSigner,
+  DataEntry,
+  Trustline,
+  PoolShareEntry,
+} from "@/types/account";
 
-// Reads the full account state for the testnet playground via Horizon REST API.
+// Reads the full account state via a Horizon-compatible API.
 //
 // Why Horizon and not Stellar RPC: the Soroban RPC getAccount call only returns
 // sequence number and base reserve - it does not expose trustlines, open offers,
-// data entries, or signers. Horizon returns all of that in two calls
-// (/accounts/{id} + /accounts/{id}/offers), with zero indexing lag for newly
-// created accounts (unlike stellar.expert, which was the previous approach).
+// data entries, or signers. Horizon returns all of that in a single call,
+// with zero indexing lag for newly created accounts.
 //
 // Future: once Soroswap API or the xBull router expose an equivalent
 // account-state endpoint we can drop the Horizon dependency here entirely.
+
+// Horizon returns signer types with different naming conventions than the SDK.
+// Validate explicitly rather than casting to catch unknown types early.
+const HORIZON_SIGNER_TYPE_MAP: Record<string, AccountSigner["type"]> = {
+  ed25519_public_key: "ed25519_public_key",
+  "hash(x)": "hash_x",
+  preauth_tx: "preauth_tx",
+  ed25519_signed_payload: "ed25519_signed_payload",
+};
+
+function parseHorizonSignerType(raw: string, address: string): AccountSigner["type"] | null {
+  const mapped = HORIZON_SIGNER_TYPE_MAP[raw];
+  if (!mapped) {
+    if (process.env.NODE_ENV !== "production") {
+      console.warn(`[account-live] unknown signer type "${raw}" on ${address}, skipping`);
+    }
+    return null;
+  }
+  return mapped;
+}
 
 interface ApiBalance {
   asset_type: string;
   asset_code?: string;
   asset_issuer?: string;
+  liquidity_pool_id?: string;
   balance: string;
   limit?: string;
   is_authorized?: boolean;
@@ -30,29 +57,26 @@ interface ApiAccount {
   balances: ApiBalance[];
   data: Record<string, string>;
   sponsor?: string;
+  num_sponsoring?: number;
 }
 
-interface ApiOffersPage {
-  _embedded?: {
-    records?: Array<{
-      id: string | number;
-      selling: { asset_type: string; asset_code?: string; asset_issuer?: string };
-      buying: { asset_type: string; asset_code?: string; asset_issuer?: string };
-      amount: string;
-      price: string;
-    }>;
-  };
-}
-
-function assetStr(a: { asset_type: string; asset_code?: string; asset_issuer?: string }): string {
+function balanceAssetStr(a: {
+  asset_type: string;
+  asset_code?: string;
+  asset_issuer?: string;
+}): string {
   if (a.asset_type === "native") return "native";
   return `${a.asset_code}:${a.asset_issuer}`;
 }
 
-export async function getLiveAccountState(address: string): Promise<AccountState> {
-  const base = PATH_ROUTING_API_URLS.testnet;
+export async function getLiveAccountState(
+  address: string,
+  network: Network = "testnet"
+): Promise<AccountState> {
+  const { PATH_ROUTING_API_URLS } = await import("@/config/networks");
+  const base = PATH_ROUTING_API_URLS[network];
   if (!base) {
-    throw new Error("NEXT_PUBLIC_PATH_ROUTING_API_TESTNET is not configured");
+    throw new Error(`NEXT_PUBLIC_PATH_ROUTING_API_${network.toUpperCase()} is not configured`);
   }
 
   const accountRes = await fetch(`${base}/accounts/${address}`, {
@@ -63,19 +87,12 @@ export async function getLiveAccountState(address: string): Promise<AccountState
   if (!accountRes.ok) throw new Error(`Account fetch failed: ${accountRes.status}`);
   const account = (await accountRes.json()) as ApiAccount;
 
-  const offersRes = await fetch(`${base}/accounts/${address}/offers?limit=200`, {
-    headers: { Accept: "application/json" },
-    cache: "no-store",
-  });
-  if (!offersRes.ok) throw new Error(`Offers fetch failed: ${offersRes.status}`);
-  const offersPage = (await offersRes.json()) as ApiOffersPage;
-
   const nativeBalance = account.balances.find((b) => b.asset_type === "native");
 
   const trustlines: Trustline[] = account.balances
     .filter((b) => b.asset_type === "credit_alphanum4" || b.asset_type === "credit_alphanum12")
     .map((b) => ({
-      asset: `${b.asset_code}:${b.asset_issuer}`,
+      asset: balanceAssetStr(b),
       balance: b.balance,
       limit: b.limit ?? "0",
       authorized: b.is_authorized ?? true,
@@ -83,28 +100,37 @@ export async function getLiveAccountState(address: string): Promise<AccountState
       code: b.asset_code!,
     }));
 
+  const poolShares: PoolShareEntry[] = account.balances
+    .filter((b) => b.asset_type === "liquidity_pool_shares" && b.liquidity_pool_id)
+    .map((b) => ({ poolId: b.liquidity_pool_id! }));
+
   const dataEntries: DataEntry[] = Object.entries(account.data ?? {}).map(([key, value]) => ({
     key,
     value,
   }));
 
-  const signers: AccountSigner[] = account.signers.map((s) => ({
-    key: s.key,
-    weight: s.weight,
-    type: s.type as AccountSigner["type"],
-  }));
+  const signers: AccountSigner[] = account.signers
+    .map((s) => {
+      const type = parseHorizonSignerType(s.type, address);
+      if (!type) return null;
+      return { key: s.key, weight: s.weight, type };
+    })
+    .filter((s): s is AccountSigner => s !== null);
 
-  const openOffers: OpenOffer[] = (offersPage._embedded?.records ?? []).map((o) => ({
-    id: String(o.id),
-    selling: assetStr(o.selling),
-    buying: assetStr(o.buying),
-    amount: o.amount,
-    price: o.price,
-  }));
+  const openOffers = await fetchOffersFromAdapter(address, network);
+
+  const extraSigners = signers.filter((s) => s.key !== address).length;
+  const numSubEntries = account.subentry_count;
+  const expectedSubEntries =
+    trustlines.length +
+    openOffers.length +
+    dataEntries.length +
+    extraSigners +
+    poolShares.length * 2;
 
   return {
     address,
-    network: "testnet",
+    network,
     sequence: account.sequence,
     nativeBalanceLumens: nativeBalance?.balance ?? "0",
     dataEntries,
@@ -114,9 +140,12 @@ export async function getLiveAccountState(address: string): Promise<AccountState
       med: account.thresholds.med_threshold,
       high: account.thresholds.high_threshold,
     },
-    numSubEntries: account.subentry_count,
+    numSubEntries,
+    numSponsoring: account.num_sponsoring ?? 0,
     sponsoredBy: account.sponsor ?? null,
     trustlines,
     openOffers,
+    poolShares,
+    subEntryMismatch: expectedSubEntries < numSubEntries,
   };
 }

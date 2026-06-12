@@ -3,7 +3,7 @@ import type { Network } from "@/config/networks";
 export interface AccountSigner {
   key: string;
   weight: number;
-  type: "ed25519_public_key" | "hash_x" | "preauth_tx";
+  type: "ed25519_public_key" | "hash_x" | "preauth_tx" | "ed25519_signed_payload";
 }
 
 export interface AccountThresholds {
@@ -34,6 +34,10 @@ export interface OpenOffer {
   price: string;
 }
 
+export interface PoolShareEntry {
+  poolId: string; // 64-char hex (without the L prefix)
+}
+
 export interface AccountState {
   address: string;
   network: Network;
@@ -44,10 +48,15 @@ export interface AccountState {
   signers: AccountSigner[];
   thresholds: AccountThresholds;
   numSubEntries: number;
+  numSponsoring: number;
   sponsoredBy: string | null;
-  // From SE API
+  // From SE API / Horizon adapter
   trustlines: Trustline[];
   openOffers: OpenOffer[];
+  poolShares: PoolShareEntry[];
+  // True when the enumerated subentry count is lower than numSubEntries from the ledger -
+  // indicates entries we could not enumerate (e.g. offers when adapter URL not configured).
+  subEntryMismatch: boolean;
 }
 
 export interface MediatorCheckResult {

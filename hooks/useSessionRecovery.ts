@@ -10,10 +10,15 @@ export function useSessionRecovery(network: Network) {
   const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    findResumableSession(network).then((s) => {
-      setSession(s);
-      setChecked(true);
-    });
+    findResumableSession(network)
+      .then((s) => {
+        setSession(s);
+        setChecked(true);
+      })
+      .catch((err) => {
+        console.error("[session] recovery failed:", err);
+        setChecked(true);
+      });
   }, [network]);
 
   return { session, checked, clearSession: () => setSession(null) };

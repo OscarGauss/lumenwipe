@@ -60,9 +60,9 @@ export default function OrbitalNode({ node }: { node: SceneNode }) {
         transition={converting ? { duration: 0.9, repeat: Infinity } : undefined}
       >
         <Icon className={`h-3 w-3 ${converting ? "text-value" : "text-stellar"}`} />
-        <span>{node.label}</span>
+        <span className="hidden sm:inline">{node.label}</span>
         {node.balance !== null && (
-          <span className={converting ? "text-value" : "text-white/45"}>
+          <span className={`hidden sm:inline ${converting ? "text-value" : "text-white/45"}`}>
             {Number(node.balance).toLocaleString("en-US", { maximumFractionDigits: 2 })}
           </span>
         )}

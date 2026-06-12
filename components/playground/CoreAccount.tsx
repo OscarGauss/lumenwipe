@@ -27,7 +27,7 @@ export default function CoreAccount() {
         {!merged ? (
           <motion.div
             key="core"
-            className="relative flex h-36 w-36 flex-col items-center justify-center rounded-full border border-stellar/40 bg-[hsl(240_14%_6%/0.9)] text-center"
+            className="relative flex h-24 w-24 sm:h-32 sm:w-32 lg:h-36 lg:w-36 flex-col items-center justify-center rounded-full border border-stellar/40 bg-[hsl(240_14%_6%/0.9)] text-center"
             style={{
               boxShadow: "0 0 0 1px hsl(var(--stellar)/0.25), 0 0 60px hsl(var(--stellar)/0.25)",
             }}
@@ -41,18 +41,22 @@ export default function CoreAccount() {
             }}
             transition={{ type: "spring", stiffness: 70, damping: 13 }}
           >
-            <span className="mkt-eyebrow text-stellar">Demo account</span>
-            <span className="mt-1 font-display text-2xl text-white tabular-nums">
+            <span className="text-[8px] sm:text-[9px] uppercase tracking-widest text-stellar">
+              Demo account
+            </span>
+            <span className="mt-0.5 sm:mt-1 font-display text-base sm:text-xl lg:text-2xl text-white tabular-nums">
               <motion.span>{display}</motion.span>
             </span>
-            <span className="text-[10px] uppercase tracking-widest text-white/40">XLM</span>
+            <span className="text-[8px] sm:text-[10px] uppercase tracking-widest text-white/40">
+              XLM
+            </span>
             {accountState && accountState.numSubEntries > 0 && (
-              <span className="mt-1 text-[10px] mkt-mono text-value">
+              <span className="mt-1 hidden text-[10px] mkt-mono text-value sm:block">
                 {lockedReserve.toFixed(1)} XLM locked
               </span>
             )}
             {demoPublic && (
-              <span className="mt-1 text-[9px] mkt-mono text-white/30">
+              <span className="mt-1 hidden text-[9px] mkt-mono text-white/30 sm:block">
                 {demoPublic.slice(0, 6)}…{demoPublic.slice(-4)}
               </span>
             )}

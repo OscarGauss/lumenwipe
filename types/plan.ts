@@ -38,6 +38,16 @@ export type DemolishPhase =
   | "COMPLETE"
   | "ABORTED";
 
+export interface PlanBlocker {
+  message: string;
+  helpUrl?: string;
+}
+
+export interface BuildPlanResult {
+  steps: PlannedStep[];
+  blockers: PlanBlocker[];
+}
+
 export interface ConversionPath {
   fromAsset: string;
   toAsset: string;

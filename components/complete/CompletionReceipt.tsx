@@ -42,7 +42,9 @@ export default function CompletionReceipt({ network }: CompletionReceiptProps) {
       })),
       totalFeeLumens: totalFee,
       usedMediator: mediatorRequired,
-    }).then(() => cleanupSession(sessionId));
+    })
+      .then(() => cleanupSession(sessionId))
+      .catch((err) => console.error("[receipt] save/cleanup failed:", err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 

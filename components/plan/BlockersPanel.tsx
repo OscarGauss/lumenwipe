@@ -1,12 +1,8 @@
 import { AlertOctagon, ExternalLink } from "lucide-react";
-
-interface Blocker {
-  message: string;
-  helpUrl?: string;
-}
+import type { PlanBlocker } from "@/types/plan";
 
 interface BlockersPanelProps {
-  blockers: Blocker[];
+  blockers: PlanBlocker[];
 }
 
 export default function BlockersPanel({ blockers }: BlockersPanelProps) {

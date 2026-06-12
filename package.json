@@ -21,7 +21,7 @@
     "test:playground": "bun scripts/test-playground-flow.ts"
   },
   "dependencies": {
-    "@stellar/stellar-sdk": "^13.3.0",
+    "@stellar/stellar-sdk": "^15.1.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/kv": "^3.0.0",
     "class-variance-authority": "^0.7.1",

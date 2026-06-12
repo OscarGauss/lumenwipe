@@ -109,7 +109,7 @@ export function usePlaygroundExecution() {
       if (!accountState) throw new Error("Account state unavailable after the mess phase");
 
       const final = usePlaygroundStore.getState();
-      final.setPlan(buildPlan(accountState, false));
+      final.setPlan(buildPlan(accountState, false).steps);
       final.setPhase("DIRTY");
     } catch (err) {
       fail(err);

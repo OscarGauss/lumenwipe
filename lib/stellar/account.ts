@@ -1,8 +1,10 @@
-import { Keypair, xdr, StrKey, Asset } from "@stellar/stellar-sdk";
+import { Keypair, xdr, StrKey, Asset, rpc as StellarRpc } from "@stellar/stellar-sdk";
 import { getRpcServer } from "./rpc";
-import { seGet, SeApiError } from "@/lib/se-api/client";
+import { fetchOffersFromAdapter } from "./horizon-adapter";
+import { seGet } from "@/lib/se-api/client";
 import { AccountNotFoundError } from "@/lib/utils/errors";
-import { STROOPS_PER_XLM } from "@/config/constants";
+import { stroopsToXlm } from "@/lib/utils/amounts";
+import { PATH_ROUTING_API_URLS } from "@/config/networks";
 import type { Network } from "@/config/networks";
 import type {
   AccountState,
@@ -11,7 +13,38 @@ import type {
   DataEntry,
   Trustline,
   OpenOffer,
+  PoolShareEntry,
 } from "@/types/account";
+
+// ─── XDR helpers ──────────────────────────────────────────────────────────────
+
+function parseXdrSigner(s: xdr.Signer): AccountSigner | null {
+  const weight = s.weight();
+  const typeName = (s.key().switch() as { name: string }).name;
+
+  switch (typeName) {
+    case "signerKeyTypeEd25519":
+      return {
+        key: StrKey.encodeEd25519PublicKey(s.key().ed25519()),
+        weight,
+        type: "ed25519_public_key",
+      };
+    case "signerKeyTypePreAuthTx":
+      return { key: StrKey.encodePreAuthTx(s.key().preAuthTx()), weight, type: "preauth_tx" };
+    case "signerKeyTypeHashX":
+      return { key: StrKey.encodeSha256Hash(s.key().hashX()), weight, type: "hash_x" };
+    case "signerKeyTypeEd25519SignedPayload": {
+      const sp = s.key().ed25519SignedPayload();
+      return {
+        key: StrKey.encodeSignedPayload(sp.toXDR()),
+        weight,
+        type: "ed25519_signed_payload",
+      };
+    }
+    default:
+      return null;
+  }
+}
 
 // ─── SE API types ─────────────────────────────────────────────────────────────
 
@@ -21,49 +54,23 @@ interface SeAccountSummary {
   data?: Record<string, string>;
 }
 
-interface SeOffersPage {
-  _embedded?: {
-    records?: Array<{
-      id: string | number;
-      selling: { asset_type: string; asset_code?: string; asset_issuer?: string };
-      buying: { asset_type: string; asset_code?: string; asset_issuer?: string };
-      amount: string;
-      price: string;
-    }>;
-  };
-}
-
-function seAssetStr(a: { asset_type: string; asset_code?: string; asset_issuer?: string }): string {
-  if (a.asset_type === "native") return "native";
-  return `${a.asset_code}:${a.asset_issuer}`;
-}
-
-// Parse SE API asset string like "USDCAllow-GISSUER56CHARS-2" or "XLM"
+// Parse SE API asset string like "USDCAllow-GISSUER56CHARS-2" or "XLM" or "L{64hex}"
 function parseSeAsset(raw: string): { code: string; issuer: string } | null {
   if (raw === "XLM") return null;
+  if (/^L[0-9a-f]{64}$/i.test(raw)) return null; // pool share - handled separately
   const match = raw.match(/^(.+)-([GC][A-Z0-9]{55})-\d+$/);
   if (!match) return null;
   return { code: match[1], issuer: match[2] };
 }
 
-// Build the correct TrustLineAsset xdr for a given asset
-function buildTrustLineAsset(asset: Asset): xdr.TrustLineAsset {
-  if (asset.isNative()) {
-    return xdr.TrustLineAsset.assetTypeNative();
-  }
-  const code = asset.getCode();
-  if (code.length <= 4) {
-    return xdr.TrustLineAsset.assetTypeCreditAlphanum4(asset.toXDRObject().alphaNum4());
-  }
-  return xdr.TrustLineAsset.assetTypeCreditAlphanum12(asset.toXDRObject().alphaNum12());
-}
+const POOL_SHARE_RE = /^L([0-9a-f]{64})$/i;
 
 // ─── Main export ───────────────────────────────────────────────────────────────
 
 export async function getAccountState(address: string, network: Network): Promise<AccountState> {
   const server = getRpcServer(network);
 
-  // 1. Get sequence number + validate existence via Stellar RPC
+  // 1. Validate existence and get sequence number via Stellar RPC
   let sequence: string;
   try {
     const rpcAccount = await server.getAccount(address);
@@ -76,10 +83,11 @@ export async function getAccountState(address: string, network: Network): Promis
     throw err;
   }
 
-  // 2. Get full account structure from AccountEntry XDR via getLedgerEntries
+  // 2. Read full AccountEntry XDR for signers, thresholds, balances, and sponsoring counters
   let signers: AccountSigner[] = [{ key: address, weight: 1, type: "ed25519_public_key" }];
   let thresholds: AccountThresholds = { low: 0, med: 1, high: 1 };
   let numSubEntries = 0;
+  let numSponsoring = 0;
   let nativeBalanceLumens = "0";
 
   try {
@@ -95,64 +103,74 @@ export async function getAccountState(address: string, network: Network): Promis
       const accountEntry = entryData.account();
 
       const rawBalance = BigInt(accountEntry.balance().toString());
-      nativeBalanceLumens = (Number(rawBalance) / STROOPS_PER_XLM).toFixed(7);
+      nativeBalanceLumens = stroopsToXlm(rawBalance);
 
       const t = accountEntry.thresholds() as Buffer;
       thresholds = { low: t[1], med: t[2], high: t[3] };
       const masterWeight = t[0];
 
       const rawSigners = accountEntry.signers();
+      const parsedSigners: AccountSigner[] = [];
+      for (const s of rawSigners) {
+        const parsed = parseXdrSigner(s);
+        if (parsed) {
+          parsedSigners.push(parsed);
+        } else if (process.env.NODE_ENV !== "production") {
+          console.warn(
+            "[account] unknown signer key type, skipping:",
+            (s.key().switch() as { name: string }).name
+          );
+        }
+      }
       signers = [
         { key: address, weight: masterWeight, type: "ed25519_public_key" },
-        ...rawSigners.map((s) => ({
-          key: StrKey.encodeEd25519PublicKey(s.key().ed25519()),
-          weight: s.weight(),
-          type: "ed25519_public_key" as const,
-        })),
+        ...parsedSigners,
       ];
 
       numSubEntries = Number(accountEntry.numSubEntries());
+
+      // numSponsoring lives in the account extension (Protocol 14+).
+      // Missing extension means 0 sponsorships (pre-Protocol 14 or simply none).
+      try {
+        const ext = accountEntry.ext();
+        if (ext.switch() === 1) {
+          const innerExt = ext.v1().ext();
+          if (innerExt.switch() === 2) {
+            numSponsoring = innerExt.v2().numSponsoring();
+          }
+        }
+      } catch {
+        // Extension not present - numSponsoring stays 0
+      }
     }
   } catch (err) {
     if (process.env.NODE_ENV !== "production")
       console.warn("[account] LedgerEntry XDR parse failed, using defaults:", err);
   }
 
-  // 3. Enumerate assets + data entries from SE API
+  // 3. Enumerate assets and data entries from stellar.expert
   let seAssets: string[] = [];
   let dataEntries: DataEntry[] = [];
-  let openOffers: OpenOffer[] = [];
 
   try {
     const seAccount = await seGet<SeAccountSummary>(network, `/account/${address}`);
     seAssets = seAccount.assets ?? [];
-    dataEntries = Object.entries(seAccount.data ?? {}).map(([key, value]) => ({
-      key,
-      value,
-    }));
+    dataEntries = Object.entries(seAccount.data ?? {}).map(([key, value]) => ({ key, value }));
   } catch (err) {
     if (process.env.NODE_ENV !== "production")
       console.warn("[account] SE API account fetch failed:", err);
   }
 
-  try {
-    const offersPage = await seGet<SeOffersPage>(network, `/account/${address}/offers`, {
-      limit: "200",
-    });
-    openOffers = (offersPage._embedded?.records ?? []).map((o) => ({
-      id: String(o.id),
-      selling: seAssetStr(o.selling),
-      buying: seAssetStr(o.buying),
-      amount: o.amount,
-      price: o.price,
-    }));
-  } catch (err) {
-    const is404 = err instanceof SeApiError && err.status === 404;
-    if (!is404 && process.env.NODE_ENV !== "production")
-      console.warn("[account] SE API offers fetch failed:", err);
-  }
+  // 4. Detect pool shares from SE API asset list (L{64-hex} prefix)
+  const poolShares: PoolShareEntry[] = seAssets
+    .filter((a) => POOL_SHARE_RE.test(a))
+    .map((a) => ({ poolId: a.slice(1).toLowerCase() }));
 
-  // 4. Fetch trustline balances via getLedgerEntries (one call per asset)
+  // 5. Fetch open DEX offers via Horizon-compatible adapter (SE API endpoint is 404)
+  const openOffers: OpenOffer[] = await fetchOffersFromAdapter(address, network);
+
+  // 6. Fetch per-trustline balances via server.getTrustline() (SDK v14+ high-level API,
+  //    replaces manual XDR LedgerKey construction + getLedgerEntries navigation)
   const trustlines: Trustline[] = [];
   const nonNativeAssets = seAssets
     .map(parseSeAsset)
@@ -161,25 +179,12 @@ export async function getAccountState(address: string, network: Network): Promis
   for (const { code, issuer } of nonNativeAssets) {
     try {
       const asset = new Asset(code, issuer);
-      const tlKey = xdr.LedgerKey.trustline(
-        new xdr.LedgerKeyTrustLine({
-          accountId: Keypair.fromPublicKey(address).xdrPublicKey(),
-          asset: buildTrustLineAsset(asset),
-        })
-      );
-      const tlResp = await server.getLedgerEntries(tlKey);
-
-      if (!tlResp.entries || tlResp.entries.length === 0) {
-        continue;
-      }
-
-      const entryData = tlResp.entries[0].val as xdr.LedgerEntryData;
-      const tl = entryData.trustLine();
+      const tl = await server.getTrustline(address, asset);
 
       const balStroops = BigInt(tl.balance().toString());
       const limitStroops = BigInt(tl.limit().toString());
-      const balance = (Number(balStroops) / STROOPS_PER_XLM).toFixed(7);
-      const limit = (Number(limitStroops) / STROOPS_PER_XLM).toFixed(7);
+      const balance = stroopsToXlm(balStroops);
+      const limit = stroopsToXlm(limitStroops);
       const authorized = (tl.flags() & 1) === 1;
 
       trustlines.push({ asset: `${code}:${issuer}`, balance, limit, authorized, issuer, code });
@@ -187,6 +192,20 @@ export async function getAccountState(address: string, network: Network): Promis
       if (process.env.NODE_ENV !== "production")
         console.warn(`[account] trustline fetch failed for ${code}:${issuer}:`, err);
     }
+  }
+
+  // 7. numSubEntries reconciliation - only when offers were fetched from the Horizon adapter
+  // (if the URL is not configured, openOffers=[] and the count would be misleadingly low).
+  let subEntryMismatch = false;
+  if (PATH_ROUTING_API_URLS[network]) {
+    const extraSigners = signers.filter((s) => s.key !== address).length;
+    const expectedSubEntries =
+      trustlines.length +
+      openOffers.length +
+      dataEntries.length +
+      extraSigners +
+      poolShares.length * 2; // pool shares cost 2 base reserves per ledger spec
+    subEntryMismatch = expectedSubEntries < numSubEntries;
   }
 
   return {
@@ -198,8 +217,11 @@ export async function getAccountState(address: string, network: Network): Promis
     signers,
     thresholds,
     numSubEntries,
+    numSponsoring,
     sponsoredBy: null,
     trustlines,
     openOffers,
+    poolShares,
+    subEntryMismatch,
   };
 }

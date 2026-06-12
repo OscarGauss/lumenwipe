@@ -135,7 +135,7 @@ const mmBefore = await fetch(`${HORIZON}/accounts/${session.accounts.mm}`)
   .then((r) => r.json() as Promise<{ balances: Array<{ asset_type: string; balance: string }> }>)
   .then((a) => parseFloat(a.balances.find((b) => b.asset_type === "native")!.balance));
 
-const plan = buildPlan(dirty, false);
+const { steps: plan } = buildPlan(dirty, false);
 log(`    plan: ${plan.map((s) => s.type).join(" → ")}`);
 
 let usedDexConversion = false;
