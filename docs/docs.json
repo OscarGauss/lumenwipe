@@ -38,6 +38,16 @@
       {
         "group": "Documentation",
         "pages": ["index", "executive-summary", "architecture", "community-and-communications"]
+      },
+      {
+        "group": "Use cases",
+        "pages": [
+          "use-cases/overview",
+          "use-cases/individuals",
+          "use-cases/wallets-and-exchanges",
+          "use-cases/embedded-wallet-platforms",
+          "use-cases/businesses-and-operations"
+        ]
       }
     ]
   },
