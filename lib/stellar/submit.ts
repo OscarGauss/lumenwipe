@@ -1,9 +1,15 @@
-import { TransactionBuilder } from "@stellar/stellar-sdk";
+import { TransactionBuilder, xdr } from "@stellar/stellar-sdk";
 import { getRpcServer } from "./rpc";
 import { translateRpcError, TxTimeoutError } from "@/lib/utils/errors";
+import { checkTransactionSignatures, InvalidSignatureError } from "@/lib/stellar/signature";
 import { NETWORK_PASSPHRASES } from "@/config/networks";
 import type { Network } from "@/config/networks";
 import { POLL_INTERVAL_MS, POLL_MAX_ATTEMPTS } from "@/config/constants";
+
+// How many times to retry a TRY_AGAIN_LATER response before surfacing the error.
+// The status is transient (node is under load) and typically resolves in seconds.
+const TRY_AGAIN_MAX_RETRIES = 3;
+const TRY_AGAIN_DELAY_MS = 4_000;
 
 export interface SubmitResult {
   txHash: string;
@@ -18,56 +24,75 @@ export async function submitAndWait(
   const server = getRpcServer(network);
   const passphrase = NETWORK_PASSPHRASES[network];
 
+  // Offline pre-flight: catch missing/invalid signatures before wasting a round-trip
+  checkTransactionSignatures(signedXdr, network);
+
   onStatus?.("Submitting to Stellar network...");
 
-  // Parse XDR string to transaction object (required by rpc.Server.sendTransaction)
   const tx = TransactionBuilder.fromXDR(signedXdr, passphrase);
 
+  // TRY_AGAIN_LATER is a transient congestion signal - retry with backoff before
+  // surfacing it as an error, so users are not interrupted for a recoverable state
   let sendResult: Awaited<ReturnType<typeof server.sendTransaction>>;
-  try {
-    sendResult = await server.sendTransaction(tx);
-  } catch (e) {
-    throw e instanceof Error ? e : new Error(String(e));
-  }
+  let tryAgainCount = 0;
+  while (true) {
+    try {
+      sendResult = await server.sendTransaction(tx);
+    } catch (e) {
+      throw e instanceof Error ? e : new Error(String(e));
+    }
 
-  if (sendResult.status === "TRY_AGAIN_LATER") {
-    throw new Error("Network is overloaded. Please retry in a moment.");
+    if (sendResult.status !== "TRY_AGAIN_LATER") break;
+
+    if (++tryAgainCount >= TRY_AGAIN_MAX_RETRIES) {
+      throw new Error(
+        "The network is congested and could not accept the transaction. Please retry in a moment."
+      );
+    }
+
+    onStatus?.(`Network busy, retrying (${tryAgainCount}/${TRY_AGAIN_MAX_RETRIES})…`);
+    await new Promise((r) => setTimeout(r, TRY_AGAIN_DELAY_MS));
   }
 
   if (sendResult.status === "ERROR") {
-    const raw = sendResult.errorResult != null ? sendResult.errorResult.toXDR("base64") : "ERROR";
+    const raw = sendResult.errorResult != null ? sendResult.errorResult.toXDR("base64") : "";
     throw new Error(translateRpcError("ERROR", raw));
   }
 
-  // DUPLICATE means the transaction was already submitted - treat as success and poll
+  // DUPLICATE means the transaction was already submitted - treat as success and poll.
+  // Use server.pollTransaction() (SDK v15.1.0 - off-by-one fixed) instead of a manual
+  // getTransaction loop. Preserves the same POLL_MAX_ATTEMPTS × POLL_INTERVAL_MS budget.
   const txHash = sendResult.hash;
   onStatus?.("Waiting for ledger confirmation...");
 
-  for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS; attempt++) {
-    await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+  const result = await server.pollTransaction(txHash, {
+    attempts: POLL_MAX_ATTEMPTS,
+    sleepStrategy: () => POLL_INTERVAL_MS,
+  });
 
-    let result;
-    try {
-      result = await server.getTransaction(txHash);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      // Network/connectivity errors must propagate - don't treat them as success.
-      if (/fetch|network|ECONNREFUSED|ETIMEDOUT|timeout|abort/i.test(msg)) throw err;
-      // XDR parse error from protocol version mismatch (e.g. TransactionMetaV4):
-      // NOT_FOUND responses carry no XDR, so a parse error here means the tx
-      // was found and applied to the ledger. Treat as success.
-      return { txHash, ledger: 0 };
-    }
-
-    if (result.status === "SUCCESS") {
-      return { txHash, ledger: result.ledger ?? 0 };
-    }
-
-    if (result.status === "FAILED") {
-      throw new Error(translateRpcError("FAILED", String(result.resultXdr ?? "FAILED")));
-    }
-    // status === "NOT_FOUND" means still pending - keep polling
+  if (result.status === "FAILED") {
+    const raw = serializeResultXdr(result.resultXdr);
+    throw new Error(translateRpcError("FAILED", raw));
   }
 
-  throw new TxTimeoutError();
+  if (result.status === "NOT_FOUND") {
+    // Exhausted all polling attempts without a definitive response
+    throw new TxTimeoutError();
+  }
+
+  // SUCCESS
+  return { txHash, ledger: result.ledger ?? 0 };
 }
+
+function serializeResultXdr(resultXdr: unknown): string {
+  if (!resultXdr) return "";
+  if (typeof resultXdr === "string") return resultXdr;
+  try {
+    return (resultXdr as xdr.TransactionResult).toXDR("base64");
+  } catch {
+    return "";
+  }
+}
+
+// Re-export so callers can distinguish signature errors from network errors
+export { InvalidSignatureError };
