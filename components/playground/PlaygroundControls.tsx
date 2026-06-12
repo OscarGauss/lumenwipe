@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AlertTriangle,
-  ArrowRight,
   Bomb,
   Check,
   ClipboardCopy,
@@ -175,8 +174,12 @@ export default function PlaygroundControls({
 
           {credentials && (
             <div className="mt-3 rounded-md border border-white/10 bg-white/[0.03] p-3">
-              <p className="mkt-eyebrow mb-2.5 text-[0.6rem] text-white/40">
+              <p className="mkt-eyebrow mb-1.5 text-[0.6rem] text-white/40">
                 Demo account credentials
+              </p>
+              <p className="mb-2.5 text-[11px] leading-relaxed text-white/45">
+                In /testnet, paste the public key as the account to close. The secret key is what
+                you sign with - the tool asks for it at execution time.
               </p>
               <div className="space-y-2 mb-3">
                 <div>
@@ -192,7 +195,7 @@ export default function PlaygroundControls({
                   <p className="mkt-mono text-[10px] text-white/35 mb-1">Secret key</p>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`min-w-0 flex-1 break-all mkt-mono text-[10px] ${
+                      className={`min-w-0 flex-1 break-all [overflow-wrap:anywhere] mkt-mono text-[10px] ${
                         secretRevealed ? "text-value" : "text-white/25"
                       }`}
                     >
@@ -214,10 +217,12 @@ export default function PlaygroundControls({
               </div>
               <Link
                 href="/testnet"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 rounded-md border border-stellar/30 bg-[hsl(var(--stellar)/0.07)] px-3 py-2 text-xs text-stellar transition-opacity hover:opacity-80"
               >
-                <ArrowRight className="h-3.5 w-3.5" />
-                Go to /testnet and demolish it yourself
+                <ExternalLink className="h-3.5 w-3.5" />
+                Open /testnet in a new tab and demolish it yourself
               </Link>
             </div>
           )}
