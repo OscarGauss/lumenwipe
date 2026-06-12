@@ -1,8 +1,8 @@
-import { Keypair, Account, xdr, Asset } from "@stellar/stellar-sdk";
+import { Account, Asset } from "@stellar/stellar-sdk";
 import { getMediatorPublicKey, type Network } from "@/config/networks";
 import { getRpcServer } from "@/lib/stellar/rpc";
 import { NoConversionPathError } from "@/lib/utils/errors";
-import { STROOPS_PER_XLM } from "@/config/constants";
+import { stroopsToXlm } from "@/lib/utils/amounts";
 import { fetchConversionPath } from "@/lib/se-api/paths";
 import { buildRemoveDataEntriesTx } from "@/lib/stellar/tx-builder/data-entries";
 import { buildCancelOffersTx } from "@/lib/stellar/tx-builder/offers";
@@ -42,20 +42,9 @@ export async function fetchLiveTrustlineBalance(
 ): Promise<string> {
   try {
     const asset = new Asset(tl.code, tl.issuer);
-    const accountId = Keypair.fromPublicKey(accountAddress).xdrPublicKey();
-    const sdkAsset = asset.toXDRObject();
-    const tlAsset =
-      tl.code.length <= 4
-        ? xdr.TrustLineAsset.assetTypeCreditAlphanum4(sdkAsset.alphaNum4())
-        : xdr.TrustLineAsset.assetTypeCreditAlphanum12(sdkAsset.alphaNum12());
-    const tlKey = xdr.LedgerKey.trustline(
-      new xdr.LedgerKeyTrustLine({ accountId, asset: tlAsset })
-    );
-    const resp = await server.getLedgerEntries(tlKey);
-    if (!resp.entries || resp.entries.length === 0) return tl.balance;
-    const entryData = resp.entries[0].val as xdr.LedgerEntryData;
-    const balStroops = BigInt(entryData.trustLine().balance().toString());
-    return (Number(balStroops) / STROOPS_PER_XLM).toFixed(7);
+    // server.getTrustline() replaces manual XDR LedgerKey construction (SDK v14+)
+    const entry = await server.getTrustline(accountAddress, asset);
+    return stroopsToXlm(BigInt(entry.balance().toString()));
   } catch {
     return tl.balance;
   }
