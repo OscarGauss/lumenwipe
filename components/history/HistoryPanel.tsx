@@ -16,10 +16,15 @@ export default function HistoryPanel({ onClose }: HistoryPanelProps) {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
 
   useEffect(() => {
-    listHistory().then((e) => {
-      setEntries(e);
-      setLoaded(true);
-    });
+    listHistory()
+      .then((e) => {
+        setEntries(e);
+        setLoaded(true);
+      })
+      .catch((err) => {
+        console.error("[history] load failed:", err);
+        setLoaded(true);
+      });
   }, []);
 
   async function handleDelete(id: string) {
