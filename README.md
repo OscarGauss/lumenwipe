@@ -25,7 +25,7 @@ LumenWipe is an open-source, non-custodial web app that walks you through closin
 
 Every transaction is built and signed in your browser. Your private keys never leave your device. The backend is read-only and stateless: it aggregates data, it never touches your funds.
 
-> **Built on top of the public-domain [stellar.expert/demolisher](https://stellar.expert/demolisher/public) by Orbit Lens**, extended with full Soroban support, DeFi protocol integration, and a production-grade UX designed for irreversible operations.
+> **Built on top of the public-domain [stellar.expert/demolisher/public](https://stellar.expert/demolisher/public) by Orbit Lens**, extended with full Soroban support, DeFi protocol integration, and a production-grade UX designed for irreversible operations.
 
 ---
 
@@ -301,7 +301,7 @@ LumenWipe is open source from day one. The full frontend, read-only backend, tra
 
 [Apache 2.0](LICENSE) - permissive, allows reuse and self-hosting, includes a patent grant.
 
-This project builds upon the open-source work of [stellar.expert/demolisher](https://stellar.expert/demolisher/public) by Orbit Lens.
+This project builds upon the open-source work of [stellar.expert/demolisher/public](https://stellar.expert/demolisher/public) by Orbit Lens.
 
 ---
 
