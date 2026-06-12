@@ -169,8 +169,9 @@ export async function getAccountState(address: string, network: Network): Promis
   // 5. Fetch open DEX offers via Horizon-compatible adapter (SE API endpoint is 404)
   const openOffers: OpenOffer[] = await fetchOffersFromAdapter(address, network);
 
-  // 6. Fetch per-trustline balances via server.getTrustline() (SDK v14+ high-level API,
-  //    replaces manual XDR LedgerKey construction + getLedgerEntries navigation)
+  // 6. Fetch per-trustline balances via server.getAssetBalance(). A skipped
+  //    trustline (rejection or missing balanceEntry) undercounts the scan and
+  //    is caught by the sub-entry reconciliation below.
   const trustlines: Trustline[] = [];
   const nonNativeAssets = seAssets
     .map(parseSeAsset)
@@ -179,15 +180,13 @@ export async function getAccountState(address: string, network: Network): Promis
   for (const { code, issuer } of nonNativeAssets) {
     try {
       const asset = new Asset(code, issuer);
-      const tl = await server.getTrustline(address, asset);
+      const res = await server.getAssetBalance(address, asset);
+      if (!res.balanceEntry) continue;
 
-      const balStroops = BigInt(tl.balance().toString());
-      const limitStroops = BigInt(tl.limit().toString());
-      const balance = stroopsToXlm(balStroops);
-      const limit = stroopsToXlm(limitStroops);
-      const authorized = (tl.flags() & 1) === 1;
+      const balance = stroopsToXlm(BigInt(res.balanceEntry.amount));
+      const authorized = res.balanceEntry.authorized;
 
-      trustlines.push({ asset: `${code}:${issuer}`, balance, limit, authorized, issuer, code });
+      trustlines.push({ asset: `${code}:${issuer}`, balance, authorized, issuer, code });
     } catch (err) {
       if (process.env.NODE_ENV !== "production")
         console.warn(`[account] trustline fetch failed for ${code}:${issuer}:`, err);
