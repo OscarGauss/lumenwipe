@@ -1,0 +1,21 @@
+---
+title: "Wallets and exchanges"
+description: "Offer account closure as a feature without changing who holds the keys."
+icon: "wallet"
+---
+
+Users ask their wallet for a "close account" button, and wallets reasonably do not want to build the wind-down logic themselves: the ordering constraints, the protocol exits, the exchange memo handling. The integration surfaces exist so they do not have to.
+
+## Wallets: embed the flow, keep your signer
+
+With the TypeScript SDK, a wallet runs the whole closure flow inside its own UI and signs with its own key management, exactly as it signs everything else. LumenWipe never sees a key; the web app at lumenwipe.com is just one consumer of the same SDK.
+
+What the wallet gets for one dependency:
+
+- The complete execution plan, in the order the ledger requires (you cannot remove a trustline that holds a balance, or merge while anything else remains).
+- Exits for the main Soroban DeFi protocols, kept current on our side: when a protocol upgrades its contracts, the wallet does not need to ship a release.
+- Exchange destination validation, including the memo enforcement that prevents the classic lost-deposit mistake.
+
+## Exchanges and anchors: clean off-boarding
+
+A customer leaving an exchange or an anchor often leaves a Stellar account behind with reserves locked in it. Pointing them at a tool that ends with a properly memo-tagged deposit, rather than an `ACCOUNT_MERGE` the exchange cannot credit, turns a support ticket into a working flow. Anchors with per-customer accounts can drive the same wind-down from their backend through the REST API, which accepts a list of addresses and returns a per-account plan.

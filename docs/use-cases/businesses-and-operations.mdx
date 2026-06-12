@@ -1,0 +1,24 @@
+---
+title: "Businesses and operations teams"
+description: "Decommission fleets of operational accounts and recover what funds them."
+icon: "building"
+---
+
+Operating on Stellar accumulates accounts the same way operating on AWS accumulates instances: deposit accounts per customer, payout channels, distribution accounts from a finished airdrop, test accounts that outlived their experiment. Each one holds at least 1 XLM, usually more, and each one is a small liability until it is cleanly retired.
+
+## Batch decommissioning
+
+The REST API takes a list of addresses and returns a per-account plan: what each account holds, what the wind-down steps are, what XLM lands at the destination. An operator drives execution from their own backend and signs with their own keys; LumenWipe never holds anything. This is the difference between "we should clean those up someday" and a script that runs in an afternoon.
+
+Typical fleets:
+
+- **Channel and payout accounts** from a payments or remittance operation that changed architecture.
+- **Airdrop or campaign distribution accounts** that finished their purpose but still hold trustlines and dust balances.
+- **Per-customer deposit accounts** at an anchor or custodial service after migration to a different model.
+- **Test and staging accounts** that were funded on mainnet for a launch rehearsal.
+
+Leftover non-XLM balances are not an obstacle: the plan converts them to XLM before removing the trustlines, and anything that cannot be converted or closed safely is reported as a blocker for that account rather than silently skipped, so a batch run never half-closes anything.
+
+## Self-hosting
+
+Some operations teams will not route account lists through third-party infrastructure, and they do not have to. The whole service is open source under Apache 2.0 and runs as a single self-hosted unit on your own infrastructure.
