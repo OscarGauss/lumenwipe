@@ -1,9 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   AlertTriangle,
+  ArrowRight,
   Bomb,
+  Check,
+  ClipboardCopy,
+  Eye,
+  EyeOff,
+  ExternalLink,
   FlaskConical,
   Loader2,
   RotateCcw,
@@ -29,6 +36,28 @@ function CountdownBadge({ expiresAt }: { expiresAt: number }) {
   );
 }
 
+interface Credentials {
+  publicKey: string;
+  secretKey: string;
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  function handleCopy() {
+    void navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+  return (
+    <button
+      onClick={handleCopy}
+      className="shrink-0 text-white/40 hover:text-white/70 transition-colors"
+    >
+      {copied ? <Check className="h-3 w-3 text-stellar" /> : <ClipboardCopy className="h-3 w-3" />}
+    </button>
+  );
+}
+
 export default function PlaygroundControls({
   start,
   demolish,
@@ -44,6 +73,26 @@ export default function PlaygroundControls({
   const accountState = usePlaygroundStore((s) => s.accountState);
   const executionPlan = usePlaygroundStore((s) => s.executionPlan);
   const recoveredXlm = usePlaygroundStore((s) => s.recoveredXlm);
+  const sessionId = usePlaygroundStore((s) => s.sessionId);
+
+  const [credentials, setCredentials] = useState<Credentials | null>(null);
+  const [loadingCredentials, setLoadingCredentials] = useState(false);
+  const [secretRevealed, setSecretRevealed] = useState(false);
+
+  async function handleGetCredentials() {
+    if (!sessionId || loadingCredentials) return;
+    setLoadingCredentials(true);
+    try {
+      const res = await fetch(`/api/playground/session/${sessionId}/credentials`);
+      if (!res.ok) throw new Error("Failed to load credentials");
+      const data = (await res.json()) as Credentials;
+      setCredentials(data);
+    } catch {
+      // silently ignore; user can retry
+    } finally {
+      setLoadingCredentials(false);
+    }
+  }
 
   const busy = phase === "CREATING_ACCOUNT" || phase === "MESSING" || phase === "DEMOLISHING";
   const lockedReserve = accountState ? 1 + accountState.numSubEntries * 0.5 : 0;
@@ -102,13 +151,76 @@ export default function PlaygroundControls({
             across {accountState?.numSubEntries ?? 0} subentries. {executionPlan.length} steps to
             take it all apart.
           </div>
-          <button
-            className={`${primaryButton} bg-value text-black hover:opacity-90`}
-            onClick={demolish}
-          >
-            <Bomb className="h-4 w-4" />
-            Demolish it
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              className={`${primaryButton} bg-value text-black hover:opacity-90`}
+              onClick={demolish}
+            >
+              <Bomb className="h-4 w-4" />
+              Demolish it here
+            </button>
+            <button
+              className={`${primaryButton} border border-white/15 text-white/70 hover:bg-white/5`}
+              onClick={() => void handleGetCredentials()}
+              disabled={loadingCredentials || !!credentials}
+            >
+              {loadingCredentials ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ExternalLink className="h-4 w-4" />
+              )}
+              Use in /testnet instead
+            </button>
+          </div>
+
+          {credentials && (
+            <div className="mt-3 rounded-md border border-white/10 bg-white/[0.03] p-3">
+              <p className="mkt-eyebrow mb-2.5 text-[0.6rem] text-white/40">
+                Demo account credentials
+              </p>
+              <div className="space-y-2 mb-3">
+                <div>
+                  <p className="mkt-mono text-[10px] text-white/35 mb-1">Public key</p>
+                  <div className="flex items-center gap-2">
+                    <span className="min-w-0 flex-1 break-all mkt-mono text-[10px] text-white/60">
+                      {credentials.publicKey}
+                    </span>
+                    <CopyButton text={credentials.publicKey} />
+                  </div>
+                </div>
+                <div>
+                  <p className="mkt-mono text-[10px] text-white/35 mb-1">Secret key</p>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`min-w-0 flex-1 break-all mkt-mono text-[10px] ${
+                        secretRevealed ? "text-value" : "text-white/25"
+                      }`}
+                    >
+                      {secretRevealed ? credentials.secretKey : "S" + "•".repeat(55)}
+                    </span>
+                    <button
+                      onClick={() => setSecretRevealed((v) => !v)}
+                      className="shrink-0 text-white/40 hover:text-white/70 transition-colors"
+                    >
+                      {secretRevealed ? (
+                        <EyeOff className="h-3 w-3" />
+                      ) : (
+                        <Eye className="h-3 w-3" />
+                      )}
+                    </button>
+                    {secretRevealed && <CopyButton text={credentials.secretKey} />}
+                  </div>
+                </div>
+              </div>
+              <Link
+                href="/testnet"
+                className="flex items-center justify-center gap-2 rounded-md border border-stellar/30 bg-[hsl(var(--stellar)/0.07)] px-3 py-2 text-xs text-stellar transition-opacity hover:opacity-80"
+              >
+                <ArrowRight className="h-3.5 w-3.5" />
+                Go to /testnet and demolish it yourself
+              </Link>
+            </div>
+          )}
         </>
       )}
 

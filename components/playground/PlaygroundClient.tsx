@@ -7,6 +7,7 @@ import { StepTypeIcon } from "@/lib/utils/stepIcons";
 import OrbitalScene from "./OrbitalScene";
 import PlaygroundControls from "./PlaygroundControls";
 import TxLogPanel from "./TxLogPanel";
+import NetworkStats from "@/components/stats/NetworkStats";
 
 function PlanSteps() {
   const executionPlan = usePlaygroundStore((s) => s.executionPlan);
@@ -49,17 +50,20 @@ export default function PlaygroundClient() {
   const { start, demolish, progressStatus } = usePlaygroundExecution();
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-      <div className="mkt-panel relative overflow-hidden rounded-lg p-4 sm:p-8">
-        <div aria-hidden className="absolute inset-0 mkt-dots opacity-60" />
-        <OrbitalScene />
-      </div>
+    <>
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+        <div className="mkt-panel relative overflow-hidden rounded-lg p-4 sm:p-8">
+          <div aria-hidden className="absolute inset-0 mkt-dots opacity-60" />
+          <OrbitalScene />
+        </div>
 
-      <div className="flex flex-col gap-4">
-        <PlaygroundControls start={start} demolish={demolish} progressStatus={progressStatus} />
-        <PlanSteps />
-        <TxLogPanel />
+        <div className="flex flex-col gap-4">
+          <PlaygroundControls start={start} demolish={demolish} progressStatus={progressStatus} />
+          <PlanSteps />
+          <TxLogPanel />
+        </div>
       </div>
-    </div>
+      <NetworkStats />
+    </>
   );
 }
