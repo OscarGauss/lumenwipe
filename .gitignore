@@ -35,3 +35,6 @@ next-env.d.ts
 
 # Claude Code local settings (skills in .agents/skills/ + .claude/skills/ symlinks ARE committed)
 .claude/settings.local.json
+
+# Local MCP server config (may reference secrets) — keep out of git
+.mcp.json
