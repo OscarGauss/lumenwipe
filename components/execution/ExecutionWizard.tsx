@@ -1,11 +1,12 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { Network } from "@/config/networks";
 import { useDemolishStore } from "@/store/demolish";
 import { useStepExecution } from "@/hooks/useStepExecution";
-import { NoConversionPathError } from "@/lib/utils/errors";
+import { NoConversionPathError, FastPathUnavailableError } from "@/lib/utils/errors";
+import { buildPlan } from "@/lib/stellar/tx-builder";
 import PlanSidebar from "./PlanSidebar";
 import StepDetailPanel from "./StepDetailPanel";
 
@@ -22,6 +23,28 @@ export default function ExecutionWizard({ network }: ExecutionWizardProps) {
 
   const { executeStep, progressStatus, buildStepXdr } = useStepExecution();
   const [noPathAsset, setNoPathAsset] = useState<string | null>(null);
+  const [keyEntered, setKeyEntered] = useState(false);
+
+  const forgetKey = useCallback(() => {
+    secretKeyRef.current = "";
+    setKeyEntered(false);
+  }, []);
+
+  // Wipe the key from memory when the wizard unmounts (navigation away).
+  useEffect(
+    () => () => {
+      secretKeyRef.current = "";
+    },
+    []
+  );
+
+  // Wipe the key from memory once the session reaches a terminal phase.
+  useEffect(() => {
+    if (phase === "COMPLETE" || phase === "ABORTED") {
+      secretKeyRef.current = "";
+      setKeyEntered(false);
+    }
+  }, [phase]);
 
   const currentStep = executionPlan[currentStepIndex];
   const allDone =
@@ -53,19 +76,31 @@ export default function ExecutionWizard({ network }: ExecutionWizardProps) {
       .catch((err) => {
         if (err instanceof NoConversionPathError) {
           setNoPathAsset(currentStep.affectedAsset?.split(":")[0] ?? "token");
+        } else if (err instanceof FastPathUnavailableError) {
+          // The fused single-step close cannot resolve a clean conversion path.
+          // Degrade to the stepwise plan, where per-asset handling (issuer
+          // fallback, skip) is available, and restart from the first step.
+          const account = useDemolishStore.getState().accountState;
+          const mediatorRequired = useDemolishStore.getState().mediatorRequired;
+          if (account) {
+            const { steps } = buildPlan(account, mediatorRequired);
+            useDemolishStore.getState().setPlan(steps);
+            setCurrentStepIndex(0);
+            setPhase("STEP_EXECUTING");
+          }
         } else {
           updateStep(currentStep.index, {
             error: err instanceof Error ? err.message : "Failed to build transaction",
           });
         }
       });
-  }, [currentStep, buildStepXdr, updateStep]);
+  }, [currentStep, buildStepXdr, updateStep, setCurrentStepIndex, setPhase]);
 
   async function handleSign() {
     if (!currentStep || !secretKeyRef.current) return;
-    const key = secretKeyRef.current;
-    secretKeyRef.current = ""; // clear before async to avoid holding it longer than needed
-    await executeStep(currentStep, key);
+    // The key is held for the whole session and wiped on terminal phase,
+    // unmount, or an explicit "Forget key" action - never per step.
+    await executeStep(currentStep, secretKeyRef.current);
   }
 
   function handleRetry() {
@@ -120,6 +155,9 @@ export default function ExecutionWizard({ network }: ExecutionWizardProps) {
           step={currentStep}
           network={network}
           secretKeyRef={secretKeyRef as React.MutableRefObject<string>}
+          keyEntered={keyEntered}
+          onKeyEntered={(valid: boolean) => setKeyEntered(valid)}
+          onForgetKey={forgetKey}
           onSign={handleSign}
           onRetry={handleRetry}
           progressStatus={progressStatus}

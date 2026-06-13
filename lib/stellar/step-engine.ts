@@ -1,7 +1,7 @@
 import { Account, Asset, xdr } from "@stellar/stellar-sdk";
 import { getMediatorPublicKey, type Network } from "@/config/networks";
 import { getRpcServer } from "@/lib/stellar/rpc";
-import { NoConversionPathError } from "@/lib/utils/errors";
+import { NoConversionPathError, FastPathUnavailableError } from "@/lib/utils/errors";
 import { stroopsToXlm } from "@/lib/utils/amounts";
 import { fetchConversionPath } from "@/lib/se-api/paths";
 import { buildRemoveDataEntriesTx } from "@/lib/stellar/tx-builder/data-entries";
@@ -14,9 +14,12 @@ import { buildRemoveTrustlinesTx } from "@/lib/stellar/tx-builder/trustlines";
 import { buildNormalizeSignersTx } from "@/lib/stellar/tx-builder/signers";
 import { buildClaimBalancesTx } from "@/lib/stellar/tx-builder/claimable-balances";
 import { buildMergeTx, buildMediatorMergePaymentTx } from "@/lib/stellar/tx-builder/merge";
+import { assembleFusedCloseOps, buildFusedCloseTx } from "@/lib/stellar/tx-builder/fused-close";
+import { computeNeedsSignerNormalization } from "@/lib/stellar/tx-builder";
 import { batchItems } from "@/lib/stellar/tx-builder/batching";
+import { OP_BATCH_LIMIT } from "@/config/constants";
 import type { AccountState, ClaimableBalance, Trustline } from "@/types/account";
-import type { PlannedStep } from "@/types/plan";
+import type { ConversionPath, PlannedStep } from "@/types/plan";
 
 // Engine core shared by the wallet flow (useStepExecution) and the testnet
 // playground (usePlaygroundExecution). Pure with respect to React: all state
@@ -189,6 +192,52 @@ export async function buildStepXdrForPlan(
         );
       }
       return buildMergeTx(sdkAccount, destinationAddress, memo, network, memoType);
+    }
+
+    case "CLOSE_ACCOUNT": {
+      // Re-read EVERY trustline's live balance, not the scan-time value: a line that
+      // was empty at scan but received a deposit since must still be converted, or the
+      // atomic close would fail at its changeTrust removal op (and retry the same way).
+      const quoted = await Promise.all(
+        trustlines.map(async (tl) => {
+          const liveBalance = await fetchLiveTrustlineBalance(tl, sourceAddress, server);
+          if (parseFloat(liveBalance) <= 0) return null;
+          const effectiveTl = { ...tl, balance: liveBalance };
+          const path = await fetchConversionPath(effectiveTl.asset, effectiveTl.balance, network);
+          if (!path)
+            throw new FastPathUnavailableError(
+              `No clean conversion path for ${tl.code}; falling back to step-by-step.`
+            );
+          return { trustline: effectiveTl, path };
+        })
+      );
+      const conversions = quoted.filter(
+        (c): c is { trustline: Trustline; path: ConversionPath } => c !== null
+      );
+      const input = {
+        needsSignerNormalization: computeNeedsSignerNormalization(accountState),
+        signers,
+        dataEntries,
+        openOffers,
+        conversions,
+        trustlines,
+        destinationAddress,
+        memo,
+        memoType,
+        includeMerge: !ctx.mediatorRequired,
+      };
+      // The Stellar SDK does not enforce the 100-operation protocol cap at build
+      // time, so an oversized fused tx would build and submit and then be rejected
+      // as an opaque failure. Count the ops up front and degrade to the stepwise
+      // plan instead. Live balances drive `conversions`, so a line that was empty
+      // at scan but funded since can push the count past the limit.
+      const ops = assembleFusedCloseOps(sourceAddress, input);
+      if (ops.length > OP_BATCH_LIMIT) {
+        throw new FastPathUnavailableError(
+          `This close needs ${ops.length} operations, over the ${OP_BATCH_LIMIT}-operation limit for one transaction; falling back to step-by-step.`
+        );
+      }
+      return buildFusedCloseTx(sdkAccount, input, network);
     }
 
     default:

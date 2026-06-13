@@ -231,3 +231,10 @@ export class NoConversionPathError extends Error {
     this.name = "NoConversionPathError";
   }
 }
+
+export class FastPathUnavailableError extends Error {
+  constructor(reason: string) {
+    super(reason);
+    this.name = "FastPathUnavailableError";
+  }
+}
