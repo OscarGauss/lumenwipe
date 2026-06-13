@@ -38,3 +38,5 @@ next-env.d.ts
 
 # local SCF submission draft (never commit)
 scf-build-submission-draft.md
+
+.idea
