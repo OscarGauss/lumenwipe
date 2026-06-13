@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Emit a self-contained server bundle (.next/standalone) so the container
+  // image used by Dokploy stays small and runs without the full node_modules
+  // tree. `next start` is replaced by `node server.js` in production.
+  output: "standalone",
   // The mainnet network used to live at /public (Stellar's network name).
   // It's now /mainnet to match the UI label; keep old links working.
   async redirects() {

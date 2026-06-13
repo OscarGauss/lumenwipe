@@ -1,0 +1,42 @@
+# Optional Docker Compose definition for deploying LumenWipe on Dokploy
+# (Compose service type). Dokploy substitutes its project environment variables
+# into ${...} below, so define every value once in the Dokploy Environment tab.
+#
+# Reminder on the build-time vs runtime split:
+#   * NEXT_PUBLIC_* are inlined into the client bundle -> passed as build args.
+#   * Server secrets (MEDIATOR_SECRET_*, KV_*, PLAYGROUND_*) are runtime only.
+#
+# If you use the plain "Dockerfile" service type instead, you don't need this
+# file — see docs/deployment-dokploy.md.
+
+services:
+  lumenwipe:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+        NEXT_PUBLIC_STELLAR_RPC_MAINNET: ${NEXT_PUBLIC_STELLAR_RPC_MAINNET}
+        NEXT_PUBLIC_STELLAR_RPC_TESTNET: ${NEXT_PUBLIC_STELLAR_RPC_TESTNET}
+        NEXT_PUBLIC_STELLAR_RPC_HEADER_NAME_MAINNET: ${NEXT_PUBLIC_STELLAR_RPC_HEADER_NAME_MAINNET}
+        NEXT_PUBLIC_STELLAR_RPC_HEADER_VALUE_MAINNET: ${NEXT_PUBLIC_STELLAR_RPC_HEADER_VALUE_MAINNET}
+        NEXT_PUBLIC_STELLAR_RPC_HEADER_NAME_TESTNET: ${NEXT_PUBLIC_STELLAR_RPC_HEADER_NAME_TESTNET}
+        NEXT_PUBLIC_STELLAR_RPC_HEADER_VALUE_TESTNET: ${NEXT_PUBLIC_STELLAR_RPC_HEADER_VALUE_TESTNET}
+        NEXT_PUBLIC_PATH_ROUTING_API_MAINNET: ${NEXT_PUBLIC_PATH_ROUTING_API_MAINNET}
+        NEXT_PUBLIC_PATH_ROUTING_API_TESTNET: ${NEXT_PUBLIC_PATH_ROUTING_API_TESTNET}
+        NEXT_PUBLIC_SE_API_BASE_MAINNET: ${NEXT_PUBLIC_SE_API_BASE_MAINNET}
+        NEXT_PUBLIC_SE_API_BASE_TESTNET: ${NEXT_PUBLIC_SE_API_BASE_TESTNET}
+        NEXT_PUBLIC_MEDIATOR_PUBLIC_MAINNET: ${NEXT_PUBLIC_MEDIATOR_PUBLIC_MAINNET}
+        NEXT_PUBLIC_MEDIATOR_PUBLIC_TESTNET: ${NEXT_PUBLIC_MEDIATOR_PUBLIC_TESTNET}
+    restart: unless-stopped
+    environment:
+      # Server-only secrets, injected at runtime.
+      MEDIATOR_SECRET_MAINNET: ${MEDIATOR_SECRET_MAINNET}
+      MEDIATOR_SECRET_TESTNET: ${MEDIATOR_SECRET_TESTNET}
+      KV_REST_API_URL: ${KV_REST_API_URL}
+      KV_REST_API_TOKEN: ${KV_REST_API_TOKEN}
+      PLAYGROUND_ISSUER_SECRET_TESTNET: ${PLAYGROUND_ISSUER_SECRET_TESTNET}
+      PLAYGROUND_MM_SECRET_TESTNET: ${PLAYGROUND_MM_SECRET_TESTNET}
+      PLAYGROUND_ENCRYPTION_KEY: ${PLAYGROUND_ENCRYPTION_KEY}
+    expose:
+      - "3000"

@@ -1,0 +1,31 @@
+# Build artifacts & deps (reinstalled inside the image)
+node_modules
+.next
+out
+build
+coverage
+
+# Local env — never bake secrets into the image. NEXT_PUBLIC_* values are
+# supplied as build args; server secrets are injected at runtime by Dokploy.
+.env
+.env.*
+!.env.example
+
+# VCS & tooling
+.git
+.gitignore
+.github
+.vercel
+*.tsbuildinfo
+next-env.d.ts
+
+# Tests & Mintlify docs site — not needed to build/run the app.
+# NOTE: content/blog/*.mdx IS read by lib/blog.ts, so content/ is kept.
+tests
+playwright.config.ts
+docs
+
+# Editor / OS noise
+.DS_Store
+.claude/settings.local.json
+.agents
