@@ -19,3 +19,7 @@ Built on Next.js and the Stellar JavaScript SDK. Transactions are signed client-
 ## Target Users
 
 Stellar account holders who want to exit the network, recover their minimum balance reserves, or consolidate multiple accounts into one.
+
+## Public API for agents
+
+LumenWipe exposes a read-only v1 API that returns an ordered plan and the unsigned transaction XDR for each step of an account wind-down, so another agent or backend can drive a close+merge, sign with its own keys, and submit. Full machine-readable reference: http://lumenwipe.pollar.dev/llms-api.txt

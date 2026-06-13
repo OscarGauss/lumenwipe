@@ -44,6 +44,11 @@ export interface StepBuildContext {
   mediatorRequired: boolean;
   executionPlan: PlannedStep[];
   assetDispositions: Record<string, AssetDisposition>;
+  // Live native balance to forward through the mediator. The browser flow omits
+  // it and reads it via the relative account route; server-side callers (the v1
+  // API) inject the value they already read, since a relative fetch can't
+  // resolve there.
+  liveNativeBalanceLumens?: string;
 }
 
 /** Signs an unsigned XDR and returns the signed envelope (local key or remote API). */
@@ -186,16 +191,20 @@ export async function buildStepXdrForPlan(
           );
         }
         // Forward essentially the full live balance through the shared mediator.
-        const res = await fetch(`/api/${network}/account/${sourceAddress}`);
-        if (!res.ok) {
-          throw new Error("Could not read the account balance to build the merge.");
+        let nativeBalanceLumens = ctx.liveNativeBalanceLumens;
+        if (nativeBalanceLumens === undefined) {
+          const res = await fetch(`/api/${network}/account/${sourceAddress}`);
+          if (!res.ok) {
+            throw new Error("Could not read the account balance to build the merge.");
+          }
+          const live = (await res.json()) as { nativeBalanceLumens: string };
+          nativeBalanceLumens = live.nativeBalanceLumens;
         }
-        const live = (await res.json()) as { nativeBalanceLumens: string };
         return buildMediatorMergePaymentTx(
           sdkAccount,
           mediator,
           destinationAddress,
-          live.nativeBalanceLumens,
+          nativeBalanceLumens,
           memo,
           network,
           memoType

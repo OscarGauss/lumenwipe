@@ -1,0 +1,194 @@
+# LumenWipe Public API (v1)
+
+> Programmatic interface to plan and build the transactions that close a Stellar
+> account and merge its balance into a destination. It returns an ordered plan
+> and the UNSIGNED transaction XDR for each step. You sign locally and submit.
+> This document is written for autonomous agents and developers integrating the API.
+
+Base URL: http://lumenwipe.pollar.dev
+Path parameter `{network}`: `mainnet` | `testnet`
+Auth: none (public). Rate-limited per IP (HTTP 429 on excess).
+CORS: `Access-Control-Allow-Origin: *` (callable from a browser).
+Request/response: JSON. Send `Content-Type: application/json`.
+
+## Security model — READ THIS FIRST
+
+- The API is READ-ONLY. It never receives, stores, or needs a secret key.
+- NEVER send a secret/seed (S...) to this API. It only takes public keys (G...).
+- Responses contain UNSIGNED transaction envelopes (base64 XDR). You sign them
+  with the source account's key in your own environment and submit them yourself.
+- Because the server builds the transaction, you MUST decode and verify each XDR
+  before signing: confirm the operation types, the destination, and the amounts
+  match your intent. This is the standard Stellar "propose / verify / sign" model.
+- The only server-side signature in the whole system is the shared mediator's
+  co-signature on the exchange-forwarding payment (see "Merging to an exchange").
+  It cannot sign for, or move, a user's account.
+
+## How to use it: the wind-down loop
+
+Every XDR is built against the account's LIVE sequence number, and the plan
+SHRINKS as steps confirm on-chain. So you cannot fetch all XDRs at once — drive
+this loop, which re-reads on-chain state every round:
+
+  1. POST /api/v1/{network}/plan         -> get ordered steps + blockers
+  2. if response is 404 account_not_found AND you already merged -> DONE
+  3. if executable == false              -> STOP, surface blockers[].message
+  4. if steps is empty                   -> DONE (account already closed)
+  5. take steps[0]
+  6. POST /api/v1/{network}/plan/step    with that step's index -> unsigned xdr
+  7. decode + verify xdr, sign locally, submit to the network, wait for success
+  8. if the step type was "MERGE"        -> DONE (the account no longer exists)
+  9. go to 1
+
+Submit signed transactions to Stellar yourself (Soroban RPC `sendTransaction`,
+or Horizon `POST /transactions`). The API does not submit.
+
+## Endpoint 1 — get the plan
+
+POST /api/v1/{network}/plan
+
+Request body:
+  {
+    "account":     "G...",   // required, source account to close
+    "destination": "G...",   // required, where the XLM goes (wallet or exchange)
+    "memo":        "12345",  // optional; REQUIRED for memo-enforcing exchanges
+    "memoType":    "id"      // optional; one of "text" | "id" | "hash"
+  }
+
+Response 200:
+  {
+    "account": "G...",
+    "destination": "G...",
+    "network": "testnet",
+    "mediatorRequired": false,  // true => destination is an exchange needing the mediator flow
+    "requiresMemo": false,      // true => destination requires a memo
+    "memoType": null,           // the required/effective memo type, or null
+    "executable": true,         // false => do NOT build steps; read blockers
+    "blockers": [],             // [{ "message": "..." }] human-readable reasons it can't proceed
+    "steps": [                  // ordered; execute by ascending index
+      {
+        "index": 0,
+        "type": "REMOVE_TRUSTLINES",
+        "title": "Remove trustlines",
+        "description": "Remove 1 trustline to recover the base reserve.",
+        "operationCount": 1,
+        "estimatedFeeLumens": "0.00001"
+      },
+      {
+        "index": 1,
+        "type": "MERGE",
+        "title": "Merge account",
+        "description": "...",
+        "operationCount": 1,
+        "estimatedFeeLumens": "0.00001",
+        "affectedAsset": "USDC:G..."  // present only on CONVERT_ASSETS steps
+      }
+    ]
+  }
+
+If `executable` is false, stop and report `blockers`. Common blockers: the
+account is sponsoring entries on other accounts, it holds liquidity-pool shares
+(withdraw via a DEX first), some sub-entries could not be enumerated, or a known
+exchange destination requires a memo that was not supplied.
+
+## Endpoint 2 — build one step's unsigned XDR
+
+POST /api/v1/{network}/plan/step
+
+Request body: same fields as /plan, plus:
+  {
+    "account": "G...",
+    "destination": "G...",
+    "memo": "...",                // same as in /plan, when applicable
+    "memoType": "id",
+    "stepIndex": 0,               // required; the `index` of the step to build
+    "fallbackToIssuer": false     // optional; see CONVERT_ASSETS below
+  }
+
+Response 200:
+  {
+    "stepIndex": 0,
+    "type": "REMOVE_TRUSTLINES",
+    "xdr": "AAAA...==",                 // UNSIGNED transaction envelope, base64
+    "operationCount": 1,
+    "networkPassphrase": "Test SDF Network ; September 2015",
+    "requiresMediatorCosign": false     // true only on the exchange MERGE step
+  }
+
+Decode `xdr` with a Stellar SDK using `networkPassphrase`, verify it, sign it
+with the source account key, and submit.
+
+## Step types
+
+  NORMALIZE_SIGNERS    Remove extra signers and reset thresholds to single-key.
+  REMOVE_DATA_ENTRIES  Delete on-account data entries (batched, 100 ops/tx).
+  CANCEL_OFFERS        Cancel open DEX offers (batched).
+  CLAIM_BALANCES       Claim claimable balances.
+  CONVERT_ASSETS       Swap a non-XLM trustline balance to XLM (one step/asset).
+  REMOVE_TRUSTLINES    Remove trustlines to free their base reserves (batched).
+  MERGE                AccountMerge: send the XLM to the destination and close
+                       the account. Always the last step.
+
+## CONVERT_ASSETS with no DEX route
+
+If an asset has no conversion path, /plan/step returns:
+  HTTP 409 { "error": "no_conversion_path", "retryWithFallback": true }
+Retry the SAME step with "fallbackToIssuer": true to send the balance back to
+its issuer instead of swapping it.
+
+## Merging to an exchange (mediator co-sign)
+
+When `mediatorRequired` is true, the MERGE step's XDR is an atomic
+[accountMerge -> mediator, payment -> exchange] transaction and the step
+response has "requiresMediatorCosign": true. Flow:
+
+  1. Sign your half of the XDR with the source account key.
+  2. POST it to the co-sign endpoint:
+       POST /api/{network}/mediator/sign
+       { "transaction": "<your-signed-xdr>" }
+     The endpoint validates the exact transaction shape and adds ONLY the
+     mediator's signature on the forwarding payment. It cannot change the
+     destination or amount.
+  3. Submit the fully-signed transaction returned in { "transaction": "..." }.
+
+Exchanges typically require a memo — supply `memo`/`memoType` in the /plan and
+/plan/step requests, or the plan will be blocked.
+
+## Errors
+
+HTTP  error code                       meaning
+400   invalid_network                  {network} is not mainnet/testnet
+400   invalid_account                  source is not a valid G address
+400   invalid_destination              destination is not a valid G address
+400   destination_same_as_source       cannot merge an account into itself
+400   missing_memo_type                memo provided without a memoType
+400   invalid_memo                     memo malformed for its type
+400   invalid_step / invalid_step_index no step at that index in the current plan
+404   account_not_found                source account does not exist (or was merged)
+409   plan_blocked                     plan has blockers; resolve before building steps
+409   no_conversion_path               no DEX route; retry with fallbackToIssuer
+429   rate_limited                     per-IP daily limit exceeded
+500   plan_failed                      unexpected server error
+502   build_failed                     network/RPC error building the XDR; safe to retry
+
+## Worked example (testnet, plain wallet destination)
+
+  # 1) Get the plan
+  curl -s -X POST http://lumenwipe.pollar.dev/api/v1/testnet/plan \
+    -H 'Content-Type: application/json' \
+    -d '{"account":"GSOURCE...","destination":"GDEST..."}'
+  # -> { "executable": true, "steps": [ { "index": 0, "type": "MERGE", ... } ] }
+
+  # 2) Build the next step's unsigned XDR
+  curl -s -X POST http://lumenwipe.pollar.dev/api/v1/testnet/plan/step \
+    -H 'Content-Type: application/json' \
+    -d '{"account":"GSOURCE...","destination":"GDEST...","stepIndex":0}'
+  # -> { "type": "MERGE", "xdr": "AAAA...==", "networkPassphrase": "Test SDF Network ; September 2015" }
+
+  # 3) In your own code: decode + verify the xdr, sign with the source key, submit.
+  #    Then loop back to step 1 until the account is merged (404 / MERGE step).
+
+## See also
+
+Human documentation: https://docs.lumenwipe.com/api-reference/plan
+Site overview for agents: http://lumenwipe.pollar.dev/llms.txt

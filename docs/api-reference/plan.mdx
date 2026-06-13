@@ -1,0 +1,152 @@
+---
+title: "Plan API"
+description: "Drive an account wind-down from your own backend: ordered steps and per-step unsigned XDR."
+---
+
+The v1 Plan API exposes the same engine the guided UI uses, so a platform can
+close a Stellar account from its **own** backend — sign with its own keys and
+submit — without embedding the full tool.
+
+It is **read-only**. It never receives or holds a secret key and returns
+**unsigned** transactions. You sign locally and submit yourself. Because the
+backend builds the transaction, you must **decode and verify each XDR before
+signing it** (confirm the operations, destination, and amounts match your
+intent) — the standard Stellar propose / verify / sign model.
+
+`[network]` is `mainnet` or `testnet`. All endpoints are public, rate-limited per
+IP, and send `Access-Control-Allow-Origin: *` (safe — no secrets, no cookies).
+
+## The wind-down loop
+
+Every XDR is built against the **live** sequence number, and the plan **shrinks**
+as steps confirm, so XDRs cannot be handed out all at once. Drive a loop that
+re-reads on-chain state each round:
+
+```
+1. POST /api/v1/{network}/plan
+2. if !executable        → stop, surface blockers
+3. if steps is empty     → done (account closed)
+4. POST /api/v1/{network}/plan/step  for steps[0]
+5. verify the XDR, sign locally, submit, confirm
+6. go to 1
+```
+
+## `POST /api/v1/{network}/plan`
+
+Returns the ordered steps and any blockers. No XDR.
+
+**Body**
+
+```json
+{
+  "account": "G...", // source account to close
+  "destination": "G...", // merge destination (wallet or exchange)
+  "memo": "12345", // optional; required for memo-enforcing exchanges
+  "memoType": "id" // "text" | "id" | "hash"
+}
+```
+
+**Response**
+
+```json
+{
+  "account": "G...",
+  "destination": "G...",
+  "network": "testnet",
+  "mediatorRequired": false,
+  "requiresMemo": false,
+  "memoType": null,
+  "executable": true,
+  "blockers": [],
+  "steps": [
+    {
+      "index": 0,
+      "type": "REMOVE_TRUSTLINES",
+      "title": "Remove trustlines",
+      "description": "Remove 1 trustline to recover the base reserve.",
+      "operationCount": 1,
+      "estimatedFeeLumens": "0.00001"
+    },
+    {
+      "index": 1,
+      "type": "MERGE",
+      "title": "Merge account",
+      "description": "...",
+      "operationCount": 1,
+      "estimatedFeeLumens": "0.00001"
+    }
+  ]
+}
+```
+
+When `executable` is `false`, do not build steps — read `blockers[].message`
+(e.g. the account is sponsoring entries, holds liquidity-pool shares, or a known
+exchange requires a memo that was not supplied).
+
+## `POST /api/v1/{network}/plan/step`
+
+Builds the **unsigned** XDR for one step, from freshly re-read on-chain state.
+
+**Body** — the same fields as `/plan`, plus:
+
+```json
+{
+  "account": "G...",
+  "destination": "G...",
+  "stepIndex": 0,
+  "fallbackToIssuer": false // optional, see CONVERT_ASSETS below
+}
+```
+
+**Response**
+
+```json
+{
+  "stepIndex": 0,
+  "type": "REMOVE_TRUSTLINES",
+  "xdr": "AAAA...==",
+  "operationCount": 1,
+  "networkPassphrase": "Test SDF Network ; September 2015",
+  "requiresMediatorCosign": false
+}
+```
+
+Take `xdr`, decode it, verify it, sign with the source account's key, and submit
+to the network.
+
+### `CONVERT_ASSETS` with no DEX route
+
+If a held asset has no conversion path, `/plan/step` returns
+`409 { "error": "no_conversion_path", "retryWithFallback": true }`. Retry the
+same step with `"fallbackToIssuer": true` to send the balance back to its issuer
+instead.
+
+### Merging to an exchange (mediator co-sign)
+
+When the destination is an exchange that does not support `ACCOUNT_MERGE`, the
+`MERGE` step returns `"requiresMediatorCosign": true`. The XDR is an atomic
+`[accountMerge → mediator, payment → exchange]` transaction. Sign your half,
+then POST it to the existing co-sign endpoint before submitting:
+
+```
+POST /api/{network}/mediator/sign
+{ "transaction": "<your-signed-xdr>" }
+```
+
+The endpoint validates the exact transaction shape and adds **only** the
+mediator's signature on the forwarding payment — it cannot change the
+destination or amount.
+
+## Errors
+
+| Status | `error`                                                       | Meaning                                                    |
+| ------ | ------------------------------------------------------------- | ---------------------------------------------------------- |
+| 400    | `invalid_network` / `invalid_account` / `invalid_destination` | Malformed path or address.                                 |
+| 400    | `destination_same_as_source`                                  | Cannot merge an account into itself.                       |
+| 400    | `missing_memo_type` / `invalid_memo`                          | A supplied memo is untyped or malformed.                   |
+| 400    | `invalid_step` / `invalid_step_index`                         | No step at that index in the current plan.                 |
+| 404    | `account_not_found`                                           | The source account does not exist on this network.         |
+| 409    | `plan_blocked`                                                | The plan has blockers; resolve them before building steps. |
+| 409    | `no_conversion_path`                                          | No DEX route; retry with `fallbackToIssuer`.               |
+| 429    | `rate_limited`                                                | Per-IP daily limit exceeded.                               |
+| 502    | `build_failed`                                                | A network/RPC error while building the XDR. Safe to retry. |

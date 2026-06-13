@@ -17,6 +17,7 @@
     "test:all": "bun test tests/unit && playwright test",
     "setup:mediator": "bun scripts/setup-mediator.ts",
     "test:mediator": "bun scripts/test-mediator-flow.ts",
+    "test:public-api": "bun scripts/test-public-api-flow.ts",
     "setup:playground": "bun scripts/setup-playground.ts",
     "test:playground": "bun scripts/test-playground-flow.ts"
   },

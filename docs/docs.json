@@ -48,6 +48,10 @@
           "use-cases/embedded-wallet-platforms",
           "use-cases/businesses-and-operations"
         ]
+      },
+      {
+        "group": "API reference",
+        "pages": ["api-reference/plan"]
       }
     ]
   },
